@@ -13,8 +13,11 @@ flake8 = "^4.0.1"
 black = "^22.6.0"
 isort = "^5.10.1"
 pytest = "^7.1.2"
-python-lsp-server = "^1.5.0"
 pyright = "^1.1.260"
+
+# These are dependencies used by some developers,
+# not actually required for testing etc.
+python-lsp-server = "^1.5.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
