@@ -12,8 +12,9 @@ python = "^3.9"
 flake8 = "^4.0.1"
 black = "^22.6.0"
 isort = "^5.10.1"
-python-language-server = "^0.36.2"
 pytest = "^7.1.2"
+python-lsp-server = "^1.5.0"
+pyright = "^1.1.260"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
