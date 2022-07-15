@@ -1,0 +1,3 @@
+[submodule "apalache"]
+	path = apalache
+	url = git@github.com:informalsystems/apalache.git
