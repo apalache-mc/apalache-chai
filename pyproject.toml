@@ -9,13 +9,16 @@ license = "Apache2.0"
 python = "^3.9"
 grpcio-tools = "^1.47.0"
 poetry = {version = "^1.2.0b3", allow-prereleases = true}
+grpcio = "^1.47.0"
+grpc-stubs = "^1.24.11"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 flake8 = "^4.0.1"
 black = "^22.6.0"
 isort = "^5.10.1"
 pytest = "^7.1.2"
 pyright = "^1.1.260"
+mypy-protobuf = "^3.2.0"
 
 # These are dependencies used by some developers,
 # not actually required for testing etc.
