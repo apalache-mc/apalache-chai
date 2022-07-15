@@ -12,7 +12,7 @@ poetry = {version = "^1.2.0b3", allow-prereleases = true}
 grpcio = "^1.47.0"
 grpc-stubs = "^1.24.11"
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
 black = "^22.6.0"
 isort = "^5.10.1"
