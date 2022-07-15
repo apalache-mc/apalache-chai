@@ -27,3 +27,16 @@ python-lsp-server = "^1.5.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+# Exclusions for static analysis tools
+
+[tool.pyright]
+exclude = ["apalache", "**/*_pb2*"]
+
+[tool.black]
+exclude = "(.*_pb2.*|apalache)"
+
+[tool.isort]
+skip_glob = ["apalache", "*_pb2*"]
+
+# See setup.cfg for flake8 exclusions
