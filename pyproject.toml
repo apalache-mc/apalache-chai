@@ -7,6 +7,11 @@ license = "Apache2.0"
 
 [tool.poetry.dependencies]
 python = "^3.9"
+grpcio-tools = "^1.47.0"
+poetry = {version = "^1.2.0b3", allow-prereleases = true}
+grpcio = "^1.47.0"
+grpc-stubs = "^1.24.11"
+types-protobuf = "^3.19.22"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
@@ -14,6 +19,7 @@ black = "^22.6.0"
 isort = "^5.10.1"
 pytest = "^7.1.2"
 pyright = "^1.1.260"
+mypy-protobuf = "^3.2.0"
 
 # These are dependencies used by some developers,
 # not actually required for testing etc.
@@ -22,3 +28,17 @@ python-lsp-server = "^1.5.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+# Exclusions for static analysis tools
+
+[tool.pyright]
+exclude = ["apalache", "**/*_pb2*"]
+
+[tool.isort]
+skip_glob = ["apalache", "**/*_pb2*"]
+
+[tool.black]
+# blakc requires regexs instead of globs
+exclude = "(apalache|.*_pb2.*)"
+
+# See setup.cfg for flake8 exclusions
