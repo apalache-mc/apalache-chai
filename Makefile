@@ -13,5 +13,3 @@ update-grpc: transExplorer_pb2.py transExplorer_pb2_grpc.py
 		--mypy_out=chai/ \
 		--grpc_python_out=chai/ \
 		$(APALACHE_PROTO)/$*.proto
-
-# end
