@@ -34,10 +34,11 @@ build-backend = "poetry.core.masonry.api"
 [tool.pyright]
 exclude = ["apalache", "**/*_pb2*"]
 
-[tool.black]
-exclude = "(.*_pb2.*|apalache)"
-
 [tool.isort]
-skip_glob = ["apalache", "*_pb2*"]
+skip_glob = ["apalache", "**/*_pb2*"]
+
+[tool.black]
+# blakc requires regexs instead of globs
+exclude = "(apalache|.*_pb2.*)"
 
 # See setup.cfg for flake8 exclusions
