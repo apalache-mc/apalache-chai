@@ -3,33 +3,33 @@
 isort:skip_file
 """
 import abc
+import chai.transExplorer_pb2
 import grpc
-import transExplorer_pb2
 
 class TransExplorerStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     OpenConnection: grpc.UnaryUnaryMultiCallable[
-        transExplorer_pb2.ConnectRequest,
-        transExplorer_pb2.Connection]
+        chai.transExplorer_pb2.ConnectRequest,
+        chai.transExplorer_pb2.Connection]
 
     LoadModel: grpc.UnaryUnaryMultiCallable[
-        transExplorer_pb2.LoadModelRequest,
-        transExplorer_pb2.LoadModelResponse]
+        chai.transExplorer_pb2.LoadModelRequest,
+        chai.transExplorer_pb2.LoadModelResponse]
     """TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}"""
 
 
 class TransExplorerServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def OpenConnection(self,
-        request: transExplorer_pb2.ConnectRequest,
+        request: chai.transExplorer_pb2.ConnectRequest,
         context: grpc.ServicerContext,
-    ) -> transExplorer_pb2.Connection: ...
+    ) -> chai.transExplorer_pb2.Connection: ...
 
     @abc.abstractmethod
     def LoadModel(self,
-        request: transExplorer_pb2.LoadModelRequest,
+        request: chai.transExplorer_pb2.LoadModelRequest,
         context: grpc.ServicerContext,
-    ) -> transExplorer_pb2.LoadModelResponse:
+    ) -> chai.transExplorer_pb2.LoadModelResponse:
         """TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}"""
         pass
 
