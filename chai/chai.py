@@ -9,8 +9,8 @@ from __future__ import annotations
 from types import TracebackType
 from typing import Optional, Type, TypeVar
 import grpc
-import transExplorer_pb2 as msg
-import transExplorer_pb2_grpc as service
+import chai.transExplorer_pb2 as msg
+import chai.transExplorer_pb2_grpc as service
 
 
 T = TypeVar("T")
