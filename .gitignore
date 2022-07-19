@@ -8,3 +8,6 @@ dist/
 *.egg
 build
 htmlcov
+
+# Used to hold the relocated proto files from the apaplache repo
+proto/
