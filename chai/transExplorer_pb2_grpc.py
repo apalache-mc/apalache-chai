@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import transExplorer_pb2 as transExplorer__pb2
+from chai import transExplorer_pb2 as chai_dot_transExplorer__pb2
 
 
 class TransExplorerStub(object):
@@ -16,13 +16,13 @@ class TransExplorerStub(object):
         """
         self.OpenConnection = channel.unary_unary(
                 '/shai.TransExplorer/OpenConnection',
-                request_serializer=transExplorer__pb2.ConnectRequest.SerializeToString,
-                response_deserializer=transExplorer__pb2.Connection.FromString,
+                request_serializer=chai_dot_transExplorer__pb2.ConnectRequest.SerializeToString,
+                response_deserializer=chai_dot_transExplorer__pb2.Connection.FromString,
                 )
         self.LoadModel = channel.unary_unary(
                 '/shai.TransExplorer/LoadModel',
-                request_serializer=transExplorer__pb2.LoadModelRequest.SerializeToString,
-                response_deserializer=transExplorer__pb2.LoadModelResponse.FromString,
+                request_serializer=chai_dot_transExplorer__pb2.LoadModelRequest.SerializeToString,
+                response_deserializer=chai_dot_transExplorer__pb2.LoadModelResponse.FromString,
                 )
 
 
@@ -47,13 +47,13 @@ def add_TransExplorerServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'OpenConnection': grpc.unary_unary_rpc_method_handler(
                     servicer.OpenConnection,
-                    request_deserializer=transExplorer__pb2.ConnectRequest.FromString,
-                    response_serializer=transExplorer__pb2.Connection.SerializeToString,
+                    request_deserializer=chai_dot_transExplorer__pb2.ConnectRequest.FromString,
+                    response_serializer=chai_dot_transExplorer__pb2.Connection.SerializeToString,
             ),
             'LoadModel': grpc.unary_unary_rpc_method_handler(
                     servicer.LoadModel,
-                    request_deserializer=transExplorer__pb2.LoadModelRequest.FromString,
-                    response_serializer=transExplorer__pb2.LoadModelResponse.SerializeToString,
+                    request_deserializer=chai_dot_transExplorer__pb2.LoadModelRequest.FromString,
+                    response_serializer=chai_dot_transExplorer__pb2.LoadModelResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -77,8 +77,8 @@ class TransExplorer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/shai.TransExplorer/OpenConnection',
-            transExplorer__pb2.ConnectRequest.SerializeToString,
-            transExplorer__pb2.Connection.FromString,
+            chai_dot_transExplorer__pb2.ConnectRequest.SerializeToString,
+            chai_dot_transExplorer__pb2.Connection.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -94,7 +94,7 @@ class TransExplorer(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/shai.TransExplorer/LoadModel',
-            transExplorer__pb2.LoadModelRequest.SerializeToString,
-            transExplorer__pb2.LoadModelResponse.FromString,
+            chai_dot_transExplorer__pb2.LoadModelRequest.SerializeToString,
+            chai_dot_transExplorer__pb2.LoadModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

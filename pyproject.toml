@@ -2,7 +2,7 @@
 name = "chai"
 version = "0.1.0"
 description = "Client for Human-Apalache Interaction"
-authors = ["Your Name <you@example.com>"]
+authors = ["Shon Feder <shon@informal.systems>"]
 license = "Apache2.0"
 
 [tool.poetry.dependencies]
@@ -24,6 +24,7 @@ mypy-protobuf = "^3.2.0"
 # These are dependencies used by some developers,
 # not actually required for testing etc.
 python-lsp-server = "^1.5.0"
+ipython = "^8.4.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
