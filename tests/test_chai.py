@@ -1,5 +1,6 @@
 import chai
 
+
 # TODO: Replace with functional test
 def test_can_instantiate_the_client() -> None:
     """
