@@ -19,7 +19,7 @@ T = TypeVar("T")
 class Chai:
     """Client for Human-Apalache Interaction
 
-    This class imlements the contextmanager protocol, and is meant to be used in
+    This class implements the contextmanager protocol, and is meant to be used in
     a `with` statement to ensure that resources are cleaned up.
 
     Example usage:
