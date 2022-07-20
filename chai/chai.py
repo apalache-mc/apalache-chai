@@ -1,16 +1,17 @@
 """The gRPC client to interact with Apalache's Shai server"""
 
+# Postpone evaluation of annotations
+# see:
+#  - https://stackoverflow.com/a/33533514/1187277
+#  - https://peps.python.org/pep-0563/
+#
+from __future__ import annotations
+
 from types import TracebackType
 from typing import Optional, Type, TypeVar
 import grpc
 import chai.transExplorer_pb2 as msg
 import chai.transExplorer_pb2_grpc as service
-
-# Postpone evaluation of annotations
-# see:
-#  - https://stackoverflow.com/a/33533514/1187277
-#  - https://peps.python.org/pep-0563/
-from __future__ import annotations
 
 T = TypeVar("T")
 
