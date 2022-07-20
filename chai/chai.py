@@ -1,10 +1,4 @@
-"""The Python implementation of the gRPC Shai client to Apalache."""
-
-# Postpone evaluation of annotations
-# see:
-#  - https://stackoverflow.com/a/33533514/1187277
-#  - https://peps.python.org/pep-0563/
-from __future__ import annotations
+"""The gRPC client to interact with Apalache's Shai server"""
 
 from types import TracebackType
 from typing import Optional, Type, TypeVar
@@ -12,6 +6,11 @@ import grpc
 import chai.transExplorer_pb2 as msg
 import chai.transExplorer_pb2_grpc as service
 
+# Postpone evaluation of annotations
+# see:
+#  - https://stackoverflow.com/a/33533514/1187277
+#  - https://peps.python.org/pep-0563/
+from __future__ import annotations
 
 T = TypeVar("T")
 
@@ -19,13 +18,15 @@ T = TypeVar("T")
 class Chai:
     """Client for Human-Apalache Interaction
 
-    This class imlements the contextmanager protocol, and is meant to bues be
-    used in a with context in order to ensure resources are cleaned up.
+    This class imlements the contextmanager protocol, and is meant to be used in
+    a `with` statement to ensure that resources are cleaned up.
 
     Example usage:
 
     ```
-    with Chai() as chai:
+    import chai
+
+    with chai.Chai() as client:
         # TODO: Add key method invocations
         pass
     ```
@@ -35,12 +36,14 @@ class Chai:
 
     ```
     try:
-      chai = Chai().connect()
+      client = chai.Chai().connect()
       # Do stuff
     finally:
-      chai.close()
+      client.close()
     ```
 
+    All methods aside from `connect` assume a connection has been obtained.
+    # TODO: document the kind of error raised when the contract is broken
     """
 
     def __init__(self, ip: str = "localhost", port: int = 8822) -> None:
