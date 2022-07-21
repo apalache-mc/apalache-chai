@@ -13,6 +13,8 @@ APALACHE_PROTO := apalache/shai/src/main/protobuf
 # See this issue details: https://github.com/protocolbuffers/protobuf/issues/1491
 CHAI_PROTO := proto/chai
 
+.PHONY: apalache
+
 update-grpc: chai/transExplorer_pb2.py chai/transExplorer_pb2_grpc.py chai/transExplorer_pb2.pyi chai/transExplorer_pb2_grpc.pyi
 
 $(CHAI_PROTO):
@@ -36,3 +38,10 @@ chai/%_pb2.py chai/%_pb2.pyi chai/%_pb2_grpc.py chai/%_pb2_grpc.pyi: $(CHAI_PROT
 		--grpc_python_out=. \
 		--mypy_grpc_out=. \
 		$(CHAI_PROTO)/$*.proto
+
+# Build the apalache executable for intgration tests
+#
+# We build apalache using the nix flake to ensure all build dependendcies
+# are picked up from the apalache configuration
+apalache:
+	cd apalache && nix develop -c bash -c "make package"
