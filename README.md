@@ -33,3 +33,16 @@ submodule, then regenerate the gRPC code, e.g.,
 pushd apalache && git pull && popod
 make update-grpc
 ```
+
+### Integration tests
+
+#### Dependencies
+
+- [The nix package manager with flakes enabled](https://github.com/informalsystems/cosmos.nix#non-nixos)
+
+The reason for depending on nix for our integration test is as follows: To run
+the integration tests, we need the version of Apalache included as a git
+submodule. We ensure the version is kept in sync by building the Apalache
+executable from the git submodule we use to obtain the proto files, and to
+ensure that we have all build dependencies for that build, we reuse Apalache's
+`flake.nix`.
