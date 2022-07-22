@@ -74,6 +74,10 @@ class Chai:
         )
         return self
 
+    def isConnected(self) -> bool:
+        """True if the client has an open connection"""
+        return self._conn is not None
+
     def close(self) -> None:
         """Close the client, cleaning up connections and channels"""
         # TODO: Send RPC to terminate connection (just a courtesy for the server)
