@@ -55,8 +55,8 @@ class Chai:
         finally:
             self.close()
 
-    def __enter__(self) -> None:
-        self.connect()
+    def __enter__(self) -> Chai:
+        return self.connect()
 
     def __exit__(self, type: Type[T], value: T, traceback: TracebackType) -> None:
         # Unused variables
