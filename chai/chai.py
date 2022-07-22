@@ -52,8 +52,9 @@ class Chai:
         self._conn: Optional[msg.Connection] = None
         try:
             self._stub = service.TransExplorerStub(self._channel)
-        finally:
+        except Exception as e:
             self.close()
+            raise e
 
     def __enter__(self) -> Chai:
         return self.connect()
