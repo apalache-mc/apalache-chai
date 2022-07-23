@@ -47,7 +47,10 @@ class Chai:
     # TODO: document the kind of error raised when the contract is broken
     """
 
-    def __init__(self, ip: str = "localhost", port: int = 8822) -> None:
+    DEFAULT_DOMAIN = "localhost"
+    DEFAULT_PORT = 8822
+
+    def __init__(self, ip: str = DEFAULT_DOMAIN, port: int = DEFAULT_PORT) -> None:
         self._channel = grpc.insecure_channel(f"{ip}:{port}")
         self._conn: Optional[msg.Connection] = None
         try:
