@@ -82,7 +82,7 @@ jobs:
         run: |
           source .venv/bin/activate
           pyright chai/ tests/
-          pytest tests/
+          pytest -s tests/
 
   integration:
     strategy:
@@ -184,4 +184,4 @@ jobs:
           source .venv/bin/activate
           # Ensure Apalache is in the PATH
           source .envrc
-          pytest integration-tests/
+          pytest -s integration-tests/
