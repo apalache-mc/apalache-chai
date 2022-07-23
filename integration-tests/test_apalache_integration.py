@@ -43,7 +43,8 @@ def ping_server(server: str, port: int, timeout: int = 3) -> bool:
 def server() -> Iterator[Popen]:
     # TODO Pass port to server explicitly when that is supported
     process = Popen(["apalache-mc", "server"])
-    timeout_secs = 10
+    # Startup can take quite some time, especially on the CI machines
+    timeout_secs = 120
     if not ping_server(Chai.DEFAULT_DOMAIN, Chai.DEFAULT_PORT, timeout_secs):
         raise RuntimeError(f"Server did not start after {timeout_secs} seconds")
     yield process
