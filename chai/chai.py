@@ -47,7 +47,7 @@ class Chai:
     # TODO: document the kind of error raised when the contract is broken
     """
 
-    DEFAULT_DOMAIN = "127.0.0.1"
+    DEFAULT_DOMAIN = "localhost"
     DEFAULT_PORT = 8822
 
     def __init__(self, ip: str = DEFAULT_DOMAIN, port: int = DEFAULT_PORT) -> None:
