@@ -130,4 +130,4 @@ jobs:
       - name: Ensure Apalache is built
         run: |
           source .envrc
-          apalache-mc version
+          pytest integration-tests/
