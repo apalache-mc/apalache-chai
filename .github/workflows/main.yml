@@ -89,14 +89,21 @@ jobs:
       fail-fast: true
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
+        python-version: ["3.9"]
     runs-on: ${{ matrix.os }}
     steps:
+      #----------------------------------------------
+      #       checkout repo and git submodules
+      #----------------------------------------------
       - uses: actions/checkout@v2
         with:
           # We need non-shallow git clone for nix
           fetch-depth: 0
           # We need the apalache code base git submodule for the integration tests
           submodules: "recursive"
+      #----------------------------------------------
+      #       set up cache for scala & java deps
+      #----------------------------------------------
       - name: Cache local m2 repository
         uses: actions/cache@v2
         with:
@@ -105,6 +112,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sbt-
             ${{ runner.os }}-
+      #----------------------------------------------
+      #       install and set up nix
+      #----------------------------------------------
       - name: Cache nix store
         # Workaround for cache action not playing well with permissions
         # See https://github.com/actions/cache/issues/324
@@ -125,9 +135,53 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      #----------------------------------------------
+      #       build Apalache
+      #----------------------------------------------
       - name: Build Apalache
         run: make apalache
-      - name: Ensure Apalache is built
+      #----------------------------------------------
+      #       set up python
+      #----------------------------------------------
+      - name: Set up python ${{ matrix.python-version }}
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      #----------------------------------------------
+      #       install & configure poetry
+      #----------------------------------------------
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+      #----------------------------------------------
+      # install root project, if required
+      #----------------------------------------------
+      - name: Install library
+        run: poetry install --no-interaction
+      #----------------------------------------------
+      # run integration tests
+      #----------------------------------------------
+      - name: Run integration tests
         run: |
+          source .venv/bin/activate
+          # Ensure Apalache is in the PATH
           source .envrc
           pytest integration-tests/
