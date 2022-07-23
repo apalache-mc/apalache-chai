@@ -50,6 +50,9 @@ def server() -> Iterator[Popen]:
     for line in process.stdout:
         if "The Apalache server is running." in line.decode("UTF-8"):
             break
+    import time
+
+    time.sleep(10)
     # Startup can take quite some time, especially on the CI machines
     timeout_secs = 60
     if not ping_server(Chai.DEFAULT_DOMAIN, Chai.DEFAULT_PORT, timeout_secs):
