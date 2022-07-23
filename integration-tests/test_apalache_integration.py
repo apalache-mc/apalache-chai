@@ -5,7 +5,7 @@ from collections.abc import Iterator
 import pytest
 import socket
 
-from subprocess import Popen
+from subprocess import PIPE, Popen
 
 from chai import Chai
 
@@ -42,11 +42,20 @@ def ping_server(server: str, port: int, timeout: int = 3) -> bool:
 @pytest.fixture(autouse=True, scope="module")
 def server() -> Iterator[Popen]:
     # TODO Pass port to server explicitly when that is supported
-    process = Popen(["apalache-mc", "server"])
+    process = Popen(["apalache-mc", "server"], stdout=PIPE)
+    if process.stdout is None:
+        raise RuntimeError(
+            "No output from Apalache server, cannot confirm it's running"
+        )
+    for line in process.stdout:
+        if "The Apalache server is running." in line.decode("UTF-8"):
+            break
     # Startup can take quite some time, especially on the CI machines
-    timeout_secs = 120
+    timeout_secs = 60
     if not ping_server(Chai.DEFAULT_DOMAIN, Chai.DEFAULT_PORT, timeout_secs):
-        raise RuntimeError(f"Server did not start after {timeout_secs} seconds")
+        raise RuntimeError(
+            f"Apalache server did not start after {timeout_secs} seconds"
+        )
     yield process
     process.terminate()
 
