@@ -1,3 +1,3 @@
-from chai.chai import Chai
+from chai.chai import Chai, NoServerConnection
 
-__all__ = ["Chai"]
+__all__ = ["Chai", "NoServerConnection"]
