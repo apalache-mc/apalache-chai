@@ -42,7 +42,7 @@ def wait_for_server(server: str, port: int, timeout: int) -> bool:
 #
 # - `autouse=True`:
 #
-#   Ensures that the fixutre is provided (i.e., that the server is started)
+#   Ensures that the fixture is provided (i.e., that the server is started)
 #   for every test.
 #
 # - `scope="module"`:
