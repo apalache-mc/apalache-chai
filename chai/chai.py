@@ -78,7 +78,7 @@ class Chai:
         )
         return self
 
-    def isConnected(self) -> bool:
+    def is_connected(self) -> bool:
         """True if the client has an open connection"""
         return self._conn is not None
 

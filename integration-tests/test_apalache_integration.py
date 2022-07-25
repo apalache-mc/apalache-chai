@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
-
-import pytest
 import socket
 import time
-
+from collections.abc import Iterator
 from subprocess import Popen
+
+import pytest
+
 from chai import Chai
 
 
@@ -77,4 +77,4 @@ def client(server: Popen) -> Iterator[Chai]:
 
 
 def test_can_obtain_a_connection(client: Chai) -> None:
-    assert client.isConnected()
+    assert client.is_connected()
