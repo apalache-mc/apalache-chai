@@ -66,7 +66,7 @@ def server() -> Iterator[Popen]:
 
 # Fixture to provide and clean up a connected client for each test
 #
-# NOTE: In contrast to the `shai` fixture, we do want to create this once for each test
+# NOTE: In contrast to the `server` fixture, we do want to create this once for each test
 @pytest.fixture
 def client(server: Popen) -> Iterator[Chai]:
     # We need to ensure the server is created before we create the client
