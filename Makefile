@@ -45,3 +45,9 @@ chai/%_pb2.py chai/%_pb2.pyi chai/%_pb2_grpc.py chai/%_pb2_grpc.pyi: $(CHAI_PROT
 # are picked up from the apalache configuration
 apalache:
 	cd apalache && nix develop -c bash -c "make package"
+
+lint:
+	flake8 .
+	black .
+	isort .
+	pyright .
