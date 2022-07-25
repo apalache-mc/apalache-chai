@@ -47,8 +47,8 @@ def wait_for_server(server: str, port: int, timeout: int) -> bool:
 #
 # - `scope="module"`:
 #
-#   Specifies that this fixture is created once for every test in the module,
-#   rather than created over and over See
+#   Specifies that this fixture is created only once for all tests in the module,
+#   rather than created once per test. See
 #   https://docs.pytest.org/en/6.2.x/fixture.html#scope-sharing-fixtures-across-classes-modules-packages-or-session
 @pytest.fixture(autouse=True, scope="module")
 def server() -> Iterator[Popen]:
