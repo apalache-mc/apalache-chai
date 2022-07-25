@@ -47,16 +47,20 @@ class Chai:
     # TODO: document the kind of error raised when the contract is broken
     """
 
-    def __init__(self, ip: str = "localhost", port: int = 8822) -> None:
+    DEFAULT_DOMAIN = "localhost"
+    DEFAULT_PORT = 8822
+
+    def __init__(self, ip: str = DEFAULT_DOMAIN, port: int = DEFAULT_PORT) -> None:
         self._channel = grpc.insecure_channel(f"{ip}:{port}")
         self._conn: Optional[msg.Connection] = None
         try:
             self._stub = service.TransExplorerStub(self._channel)
-        finally:
+        except Exception as e:
             self.close()
+            raise e
 
-    def __enter__(self) -> None:
-        self.connect()
+    def __enter__(self) -> Chai:
+        return self.connect()
 
     def __exit__(self, type: Type[T], value: T, traceback: TracebackType) -> None:
         # Unused variables
@@ -73,6 +77,10 @@ class Chai:
             msg.ConnectRequest()
         )
         return self
+
+    def isConnected(self) -> bool:
+        """True if the client has an open connection"""
+        return self._conn is not None
 
     def close(self) -> None:
         """Close the client, cleaning up connections and channels"""
