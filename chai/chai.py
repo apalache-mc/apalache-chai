@@ -10,6 +10,7 @@
 #  - https://peps.python.org/pep-0563/
 #
 from __future__ import annotations
+from collections.abc import Callable
 
 import asyncio
 from collections.abc import AsyncIterator, Awaitable
@@ -25,10 +26,35 @@ import chai.transExplorer_pb2 as msg
 import chai.transExplorer_pb2_grpc as service
 
 T = TypeVar("T")
+# See https://peps.python.org/pep-0612
+P = ParamSpec("P")
+
 
 
 class NoServerConnection(Exception):
     """Raised if client cannot connect to server after timeout expires"""
+
+
+class RpcWithoutConnectionException(Exception):
+    """
+    Raised when an RPC is called without the client having first obtained a
+    connection
+    """
+
+def _requires_connection(rpc_call: RpcMethod[P, Any]) -> RpcMethod[P, Any]:
+    """
+    Decorator to enforce the contract that RPC calls presuppose the
+    client has a connection
+    """
+
+    def checked_rpc_call(client: Chai, *args: P.args, **kwargs: P.kwargs) -> Any:
+        if not client.is_connected():
+            raise RpcWithoutConnectionException(f"calling method {rpc_call.__name__}")
+        else:
+            # This is a method invocation on `client`, just using prefix notation
+            return rpc_call(client, *args, **kwargs)
+
+    return checked_rpc_call
 
 
 class Chai(Awaitable):
@@ -174,3 +200,13 @@ class Chai(Awaitable):
         ):
             await self._channel.close()
         # TODO: Send RPC to terminate connection (just a courtesy for the server)
+
+
+# An `RpcMethod[P, T]` is an instance method of `Chai` cliant, with any
+# paramters, `P`, and returning a value of type `T`.
+#
+# For info on the typing mechanim here, see https://peps.python.org/pep-0612/
+#
+# NOTE: Must follow the definition of `Chai` in order to have that class in
+# scope.
+RpcMethod = Callable[Concatenate[Chai, P], T]
