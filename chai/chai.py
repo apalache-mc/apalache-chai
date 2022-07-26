@@ -145,7 +145,7 @@ class Chai(Awaitable):
 
         req = msg.ConnectRequest()
 
-        # Set up a timer so we can timeout if not connection is obtained in time
+        # Set up a timer so we can timeout if no connection is obtained in time
         loop = asyncio.get_running_loop()
         end_time = loop.time() + self._timeout
         while loop.time() < end_time:
