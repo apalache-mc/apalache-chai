@@ -1,3 +1,1 @@
-from chai.chai import Chai, NoServerConnection
-
-__all__ = ["Chai", "NoServerConnection"]
+from chai.chai import Chai, LoadModuleErr, NoServerConnection, RpcErr  # noqa
