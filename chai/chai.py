@@ -273,7 +273,7 @@ class Chai(Awaitable):
         # TODO: Send RPC to terminate connection (just a courtesy for the server)
 
 
-# An `RpcMethod[P, T]` is an instance method of the `Chai` cliant, with any
+# An `RpcMethod[P, T]` is an instance method of the `Chai` client, with any
 # paramters, `P`, and returning a value of type `RpcResult[T]`.
 #
 # For info on the typing mechanim here, see https://peps.python.org/pep-0612/
