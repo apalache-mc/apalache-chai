@@ -6,6 +6,7 @@ from subprocess import Popen
 import pytest
 
 from chai import Chai, NoServerConnection
+from chai.chai import LoadModuleErr, RpcCallWithoutConnection
 
 
 # Fixture to start and clean up Apalache's Shai server
@@ -52,3 +53,52 @@ async def test_raises_error_after_timeout() -> None:
             await client.connect()
     finally:
         await client.close()
+
+
+async def test_can_load_model(client: Chai) -> None:
+    spec = """
+---- MODULE M ----
+Foo == TRUE
+====
+"""
+    res = await client.load_model(spec)
+    assert isinstance(res, dict)
+    m = res["modules"][0]
+    assert m["name"] == "M" and m["kind"] == "TlaModule"
+
+
+async def test_can_load_model_with_aux_modules(client: Chai) -> None:
+    spec = """
+---- MODULE M ----
+EXTENDS A
+Foo == FooA
+====
+"""
+    aux = [
+        """
+---- MODULE A ----
+FooA == TRUE
+====
+"""
+    ]
+    res = await client.load_model(spec, aux)
+    assert isinstance(res, dict)
+    m = res["modules"][0]
+    assert any(d["name"] == "FooA" for d in m["declarations"])
+
+
+async def test_loading_invalid_model_gives_error(client: Chai) -> None:
+    spec = """
+---- missing module declaration ----
+Foo == TRUE
+====
+"""
+    res = await client.load_model(spec)
+    assert isinstance(res, LoadModuleErr)
+    assert "No module name found in source" in res.msg
+
+
+async def test_loading_model_on_client_without_connection_raises() -> None:
+    client = Chai()
+    with pytest.raises(RpcCallWithoutConnection):
+        await client.load_model("")
