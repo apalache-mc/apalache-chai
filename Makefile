@@ -15,13 +15,21 @@ CHAI_PROTO := proto/chai
 
 .PHONY: apalache lint test integration update-rgpc
 
-update-grpc: chai/transExplorer_pb2.py chai/transExplorer_pb2_grpc.py chai/transExplorer_pb2.pyi chai/transExplorer_pb2_grpc.pyi
+update-grpc: \
+  chai/transExplorer_pb2.py \
+  chai/transExplorer_pb2_grpc.py \
+  chai/transExplorer_pb2.pyi \
+  chai/transExplorer_pb2_grpc.pyi \
+  chai/cmdExecutor_pb2.py \
+  chai/cmdExecutor_pb2_grpc.py \
+  chai/cmdExecutor_pb2.pyi \
+  chai/cmdExecutor_pb2_grpc.pyi
 
 $(CHAI_PROTO):
 	mkdir -p $(CHAI_PROTO)
 
-$(CHAI_PROTO)/transExplorer.proto: $(CHAI_PROTO)
-	cp $(APALACHE_PROTO)/transExplorer.proto proto/chai/transExplorer.proto
+$(CHAI_PROTO)/%.proto: $(CHAI_PROTO)
+	cp $(APALACHE_PROTO)/$*.proto $(CHAI_PROTO)/$*.proto
 
 # The generated protobuf and gRPC code
 #
@@ -30,8 +38,8 @@ $(CHAI_PROTO)/transExplorer.proto: $(CHAI_PROTO)
 #
 # `--mypy_out` and `--mypy_grpc_out` ensure that type stubs will be generated
 # for the generated protobuf and gRPC code
-chai/%_pb2.py chai/%_pb2.pyi chai/%_pb2_grpc.py chai/%_pb2_grpc.pyi: $(CHAI_PROTO)/transExplorer.proto
-	python -m grpc_tools.protoc \
+chai/%_pb2.py chai/%_pb2.pyi chai/%_pb2_grpc.py chai/%_pb2_grpc.pyi: $(CHAI_PROTO)/transExplorer.proto $(CHAI_PROTO)/cmdExecutor.proto
+	poetry run python -m grpc_tools.protoc \
 		--proto_path=proto/  \
 		--python_out=. \
 		--mypy_out=. \
