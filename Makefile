@@ -13,7 +13,7 @@ APALACHE_PROTO := apalache/shai/src/main/protobuf
 # See this issue details: https://github.com/protocolbuffers/protobuf/issues/1491
 CHAI_PROTO := proto/chai
 
-.PHONY: apalache
+.PHONY: apalache lint test integration update-rgpc
 
 update-grpc: chai/transExplorer_pb2.py chai/transExplorer_pb2_grpc.py chai/transExplorer_pb2.pyi chai/transExplorer_pb2_grpc.pyi
 
@@ -51,3 +51,10 @@ lint:
 	black .
 	isort .
 	pyright .
+
+test:
+	poetry run pyright chai/ tests/
+	poetry run pytest -s tests/
+
+integration:
+	poetry run pytest -s integration-tests/
