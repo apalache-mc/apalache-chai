@@ -13,11 +13,11 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABC, abstractclassmethod, abstractmethod
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Generic, Optional, ParamSpec, Protocol, TypeVar, Union
+from typing import Any, Generic, Optional, Protocol, TypeVar, Union
 from chai.transExplorer_pb2 import PingRequest
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
@@ -84,12 +84,6 @@ class HasPingRequest(Protocol):
     def PingRequest(self) -> Any:
         ...
 
-
-# Types bound to functions
-F = TypeVar("F", bound=Callable[..., Any])
-
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
 
 # For the type annotation of decorators, see
 # https://github.com/microsoft/pyright/blob/main/docs/typed-libraries.md#annotating-decorators
