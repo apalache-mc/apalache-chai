@@ -1,4 +1,4 @@
-"""The gRPC client to interact with Apalache's Shai server"""
+"""The base class for clients that interact with Apalache's Shai server"""
 
 # TODO: Mypy can't currently generate stubs for the grpc.aio code, so we have a
 # few `type: ignore` annotations scattered around. Remove these when
@@ -12,12 +12,14 @@
 from __future__ import annotations
 
 import asyncio
+from ctypes import ArgumentError
 import json
+from abc import ABC, abstractclassmethod, abstractmethod
 from collections.abc import AsyncIterator, Awaitable, Callable, Iterable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, TypeVar, Union
+from typing import Any, Generic, Optional, TypeVar, Union
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
@@ -25,12 +27,32 @@ import grpc.aio as aio  # type: ignore
 from grpc import ChannelConnectivity
 from typing_extensions import Concatenate, ParamSpec
 
-import chai.transExplorer_pb2 as msg
-import chai.transExplorer_pb2_grpc as service
+#############
+# DATATYPES #
+#############
 
 T = TypeVar("T")
-# See https://peps.python.org/pep-0612
-P = ParamSpec("P")
+# Types bound to functions
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+class Source(str):
+    """
+    A source from which the client can load data,
+    """
+
+    # Supported inputs to derive a `Source`
+    Input = Union[str, Path]
+
+    def __new__(cls, source: Input):
+        if isinstance(source, str):
+            return super().__new__(cls, source)
+        elif isinstance(source, Path):
+            return super().__new__(cls, source.read_text())
+        else:
+            raise ValueError(
+                f"Source can only be construced from a str or a Path, given {type(source)}"
+            )
 
 
 @dataclass
@@ -40,32 +62,13 @@ class RpcErr:
     msg: str
 
 
-class LoadModuleErr(RpcErr):
-    """Represents an error when loading a module (e.g., a parse error)"""
-
-
 # An RpcResult[T] is a value of type `T` if the RPC succeeded, returning a `T`
 # from the server, or else it is an `RpcErr`.
 RpcResult = Union[T, RpcErr]
 
-# A `Source` is one of the data types from which the client supports loading
-# data.
-Source = Union[str, Path]
-
-
-def _content_of_source(source: Source) -> str:
-    if isinstance(source, str):
-        return source
-    elif isinstance(source, Path):
-        return source.read_text()
-
 
 class ChaiException(Exception):
     """The base class of exceptions raised by Chai"""
-
-
-class NoServerConnection(ChaiException):
-    """Raised if client cannot connect to server after timeout expires"""
 
 
 class RpcCallWithoutConnection(ChaiException):
@@ -75,13 +78,27 @@ class RpcCallWithoutConnection(ChaiException):
     """
 
 
-def _requires_connection(rpc_call: RpcMethod[P, T]) -> RpcMethod[P, T]:
+class NoServerConnection(ChaiException):
+    """Raised if client cannot connect to server after timeout expires"""
+
+
+# For the type annotation of decorators, see
+# https://github.com/microsoft/pyright/blob/main/docs/typed-libraries.md#annotating-decorators
+def _requires_connection(rpc_call: F) -> Callable[[F], F]:
     """
-    Decorator to enforce the contract that RPC calls presuppose the
-    client has a connection
+    A decorator to enforce the contract that RPC calls presuppose the
+    client has a connection.
+
+    Example usage:
+
+    ```
+    @_required_connection
+    def rpc_foo(self, ...):
+        # ...
+    ```
     """
 
-    def checked_rpc_call(client: Chai, *args: P.args, **kwargs: P.kwargs) -> Any:
+    def checked_rpc_call(client, *args, **kwargs):
         if not client.is_connected():
             raise RpcCallWithoutConnection(f"calling method {rpc_call.__name__}")
         else:
@@ -91,8 +108,17 @@ def _requires_connection(rpc_call: RpcMethod[P, T]) -> RpcMethod[P, T]:
     return checked_rpc_call
 
 
-class Chai(Awaitable):
-    """Client for Human-Apalache Interaction
+# The type of the grcp service accessed by the client
+Service = TypeVar("Service")
+
+
+class Chai(Generic[Service], Awaitable, ABC):
+    """Chai: Client for Human-Apalache Interaction
+
+    This is the base class implementing core functionality required to connect
+    to Shai: Server for Human-Apalache Interaction. Specific functionality
+    provided by the server's services is exposed through service-specific
+    subclasses.
 
     This class implements the contextmanager protocol, and is meant to be used
     in a `with` statement to ensure that resources are cleaned up.
@@ -100,12 +126,15 @@ class Chai(Awaitable):
     Example usage:
 
     ```
-    from chai import Chai
+    from client import Chai
 
     with Chai.create() as client:
         assert client.is_connected()
-        spec_data = client.load_model(Path(.) / 'my' / 'spec.tla')
+        # Do stuff
     ```
+
+    The client will be closed automatically, and its connection terminated when
+    leaving the context.
 
     If you need to use the class outside of a `with` statement, be sure to
     obtain a connection before doing your work and to close the client when
@@ -125,8 +154,51 @@ class Chai(Awaitable):
     will raise an `RpcCallWithoutConnection` exception.
     """
 
-    DEFAULT_DOMAIN = "localhost"
-    DEFAULT_PORT = 8822
+    _DEFAULT_DOMAIN = "localhost"
+    _DEFAULT_PORT = 8822
+    _DEFAULT_TIMEOUT = 60.0
+
+    @abstractclassmethod
+    def service(cls, channel: aio.Channel) -> Service:
+        """Constructor for the protobuf derived service stub"""
+        ...
+
+    def __init__(
+        self,
+        domain: Optional[str] = None,
+        port: Optional[int] = None,
+        timeout: Optional[float] = None,
+    ) -> None:
+        """Initialize the Chai client.
+
+        Args:
+
+            domain: domain name or IP where the Apalache server is running
+            port: port to which the Apalache server is connected
+            timeout: how long to wait before giving up when trying to connect to
+                the server (default: 60 seconds)
+        """
+
+        domain = domain or self._DEFAULT_DOMAIN
+        port = port or self._DEFAULT_PORT
+        timeout = timeout or self._DEFAULT_TIMEOUT
+
+        self._channel_spec = f"{domain}:{port}"
+        self._timeout = timeout
+        self._channel: Optional[aio.Channel] = None
+
+    @property
+    def stub(self) -> Service:
+        """The protobuf stub implementing the interface to the supported Shai service"""
+        return self._stub
+
+    # We need the client to implement the await protocol for our async
+    # contextmanager `create`
+    def __await__(self):
+        async def closure():
+            return self
+
+        return closure().__await__()
 
     # The `create` class method lets us use grpcio.aio's async context manager
     # to safely manage the state of the channel, and provide the user with an
@@ -155,36 +227,6 @@ class Chai(Awaitable):
             # To ensure any resources besides the channel are also cleaned up
             await client.close()
 
-    def __init__(
-        self,
-        domain: str = DEFAULT_DOMAIN,
-        port: int = DEFAULT_PORT,
-        timeout: float = 60.0,
-    ) -> None:
-        """Initialize the Chai client.
-
-        Args:
-
-            domain: domain name or IP where the Apalache server is running
-            port: port to which the Apalache server is connected
-            timeout: how long to wait before giving up when trying to connect to
-                the server (default: 60 seconds)
-        """
-        self._channel_spec = f"{domain}:{port}"
-
-        self._timeout = timeout
-
-        self._channel: Optional[aio.Channel] = None
-        self._conn: Optional[msg.Connection] = None
-        self._stub: service.TransExplorerStub
-
-    # We need the client to implement the await protocol
-    def __await__(self):
-        async def closure():
-            return self
-
-        return closure().__await__()
-
     async def connect(self, channel: Optional[aio.Channel] = None) -> Chai:
         """Obtain a connection from the server
 
@@ -203,16 +245,15 @@ class Chai(Awaitable):
             # statement)
             self._channel = channel
 
-        self._stub = service.TransExplorerStub(self._channel)
-
-        req = msg.ConnectRequest()
+        self._stub = self.service(self._channel)
 
         # Set up a timer so we can timeout if no connection is obtained in time
         loop = asyncio.get_running_loop()
         end_time = loop.time() + self._timeout
         while loop.time() < end_time:
             try:
-                self._conn = await self._stub.OpenConnection(req)  # type: ignore
+                # TODO Must implement Ping message on services
+                await self._stub.Ping(req)  # type: ignore
                 return self
             except aio.AioRpcError:
                 # We weren't able to establish a connection this try
@@ -223,45 +264,9 @@ class Chai(Awaitable):
     def is_connected(self) -> bool:
         """True if the client has an open connection on a ready channel"""
         return (
-            self._conn is not None
-            and self._channel is not None
+            self._channel is not None
             and self._channel.get_state() is ChannelConnectivity.READY
         )
-
-    @_requires_connection
-    async def load_model(
-        self,
-        spec: Source,
-        aux: Optional[Iterable[Source]] = None,
-    ) -> RpcResult[dict]:
-        """Load a model into the connected session
-
-        Args:
-
-            spec: a `Source` for a TLA+ specification
-            aux: an optional iterable of auxiliary TLA+ modules
-
-        Returns:
-
-            RpcResult[dict]: where dict is the content of the parsed model as a
-                dictionary representing ther Apalache IR if successful, or a
-                `LoadModuleErr` if something something goes wrong.
-        """
-
-        aux_sources = aux or []
-
-        resp: msg.LoadModelResponse = await self._stub.LoadModel(
-            msg.LoadModelRequest(
-                conn=self._conn,
-                spec=_content_of_source(spec),
-                aux=(_content_of_source(s) for s in aux_sources),
-            )
-        )  # type: ignore
-
-        if resp.HasField("err"):
-            return LoadModuleErr(resp.err)
-        else:
-            return json.loads(resp.spec)
 
     async def close(self) -> None:
         """Close the client, cleaning up connections and channels"""
@@ -270,14 +275,3 @@ class Chai(Awaitable):
             and self._channel.get_state() is not ChannelConnectivity.SHUTDOWN
         ):
             await self._channel.close()
-        # TODO: Send RPC to terminate connection (just a courtesy for the server)
-
-
-# An `RpcMethod[P, T]` is an instance method of the `Chai` client, with any
-# paramters, `P`, and returning a value of type `RpcResult[T]`.
-#
-# For info on the typing mechanim here, see https://peps.python.org/pep-0612/
-#
-# NOTE: Must follow the definition of `Chai` in order to have that class in
-# scope.
-RpcMethod = Callable[Concatenate[Chai, P], Awaitable[RpcResult[T]]]
