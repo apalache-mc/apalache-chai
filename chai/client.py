@@ -12,28 +12,26 @@
 from __future__ import annotations
 
 import asyncio
-from ctypes import ArgumentError
-import json
 from abc import ABC, abstractclassmethod, abstractmethod
-from collections.abc import AsyncIterator, Awaitable, Callable, Iterable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Generic, Optional, TypeVar, Union
+from typing import Any, Generic, Optional, ParamSpec, Protocol, TypeVar, Union
+from chai.transExplorer_pb2 import PingRequest
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
 import grpc.aio as aio  # type: ignore
 from grpc import ChannelConnectivity
-from typing_extensions import Concatenate, ParamSpec
+
+from typing_extensions import Self
 
 #############
 # DATATYPES #
 #############
 
 T = TypeVar("T")
-# Types bound to functions
-F = TypeVar("F", bound=Callable[..., Any])
 
 
 class Source(str):
@@ -82,9 +80,20 @@ class NoServerConnection(ChaiException):
     """Raised if client cannot connect to server after timeout expires"""
 
 
+class HasPingRequest(Protocol):
+    def PingRequest(self) -> Any:
+        ...
+
+
+# Types bound to functions
+F = TypeVar("F", bound=Callable[..., Any])
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
 # For the type annotation of decorators, see
 # https://github.com/microsoft/pyright/blob/main/docs/typed-libraries.md#annotating-decorators
-def _requires_connection(rpc_call: F) -> Callable[[F], F]:
+def _requires_connection(rpc_call):
     """
     A decorator to enforce the contract that RPC calls presuppose the
     client has a connection.
@@ -159,8 +168,20 @@ class Chai(Generic[Service], Awaitable, ABC):
     _DEFAULT_TIMEOUT = 60.0
 
     @abstractclassmethod
-    def service(cls, channel: aio.Channel) -> Service:
+    def _service(cls, channel: aio.Channel) -> Service:
         """Constructor for the protobuf derived service stub"""
+        ...
+
+    # TODO(shonfeder): Ideally there would be a single shared ping request
+    # but the grpc generation tooling for python behaves very poorly w/r/t
+    # module paths and grpc packages: https://github.com/grpc/grpc/issues/9575
+    # Simply duplicating the message in each service is the most simple hack
+    # to workaround these problems I'm currently aware of.
+    @classmethod
+    @property
+    @abstractmethod
+    def PING_REQUEST(cls) -> Any:
+        """The PingRequest message belonging to the service"""
         ...
 
     def __init__(
@@ -186,11 +207,8 @@ class Chai(Generic[Service], Awaitable, ABC):
         self._channel_spec = f"{domain}:{port}"
         self._timeout = timeout
         self._channel: Optional[aio.Channel] = None
-
-    @property
-    def stub(self) -> Service:
-        """The protobuf stub implementing the interface to the supported Shai service"""
-        return self._stub
+        # Used to store the gRPC service stub provoding the lower-level gRPC functionality
+        self._stub: Service
 
     # We need the client to implement the await protocol for our async
     # contextmanager `create`
@@ -205,7 +223,7 @@ class Chai(Generic[Service], Awaitable, ABC):
     # instance of the Chai client in that context.
     @classmethod
     @asynccontextmanager
-    async def create(cls, *args: Any, **kwargs: Any) -> AsyncIterator[Chai]:
+    async def create(cls, *args: Any, **kwargs: Any) -> AsyncIterator[Self]:
         """Async context manager to create a Chai client with managed resources
 
         This is the recommended way to create a client, as it ensures that the
@@ -227,7 +245,7 @@ class Chai(Generic[Service], Awaitable, ABC):
             # To ensure any resources besides the channel are also cleaned up
             await client.close()
 
-    async def connect(self, channel: Optional[aio.Channel] = None) -> Chai:
+    async def connect(self, channel: Optional[aio.Channel] = None) -> Chai[Service]:
         """Obtain a connection from the server
 
         All other methods assume a connection has been obtained. This method is
@@ -245,15 +263,14 @@ class Chai(Generic[Service], Awaitable, ABC):
             # statement)
             self._channel = channel
 
-        self._stub = self.service(self._channel)
+        self._stub = self._service(self._channel)
 
         # Set up a timer so we can timeout if no connection is obtained in time
         loop = asyncio.get_running_loop()
         end_time = loop.time() + self._timeout
         while loop.time() < end_time:
             try:
-                # TODO Must implement Ping message on services
-                await self._stub.Ping(req)  # type: ignore
+                await self._stub.ping(PingRequest)  # type: ignore
                 return self
             except aio.AioRpcError:
                 # We weren't able to establish a connection this try

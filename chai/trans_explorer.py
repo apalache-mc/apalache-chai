@@ -11,18 +11,13 @@
 #
 from __future__ import annotations
 
-import asyncio
 import json
-from collections.abc import AsyncIterator, Awaitable, Callable, Iterable
-from contextlib import asynccontextmanager
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Optional, TypeVar, Union
+from collections.abc import Iterable
+from typing import Optional, TypeVar
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
 import grpc.aio as aio  # type: ignore
-from grpc import ChannelConnectivity
 
 import chai.transExplorer_pb2 as msg
 import chai.transExplorer_pb2_grpc as service
@@ -69,8 +64,10 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
     will raise an `RpcCallWithoutConnection` exception.
     """
 
+    PING_REQUEST = msg.PingRequest()  # type: ignore
+
     @classmethod
-    def service(cls, channel: aio.Channel) -> service.TransExplorerStub:
+    def _service(cls, channel: aio.Channel) -> service.TransExplorerStub:
         return service.TransExplorerStub(channel)
 
     def __init__(
@@ -89,58 +86,26 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
                 the server (default: 60 seconds)
         """
         super().__init__(domain, port, timeout)
-        self._conn: Optional[msg.Connection] = None
-        self._stub: service.TransExplorerStub
 
-    # async def connect(self, channel: Optional[aio.Channel] = None) -> client.Chai:
-    #     """Obtain a connection from the server
+        # A session token used by the server to track the state for this client's requets.
+        # This is required by the TransExplorer service since it is stateful.
+        self._conn: Optional[msg.Connection]
 
-    #     All other methods assume a connection has been obtained. This method is
-    #     called automatically when the class is used as a context manager.
+    async def connect(self, channel: Optional[aio.Channel] = None) -> client.Chai:
+        """Obtain a connection from the server"""
+        await super().connect(channel)
+        self._conn = await self._stub.OpenConnection(msg.ConnectRequest())  # type: ignore
+        return self
 
-    #     If you call this method directly, you should be sure to call
-    #     `self.close()` to ensure the connection and channel is
-    #     """
-    #     if channel is None:
-    #         # No channel is provided, so we create an unmanaged channel,
-    #         # which the caller must close via `self.close()`
-    #         self._channel = aio.insecure_channel(self._channel_spec)
-    #     else:
-    #         # We assume the caller is managing the channel (i.e., via a `with`
-    #         # statement)
-    #         self._channel = channel
-
-    #     self._stub = service.TransExplorerStub(self._channel)
-
-    #     req = msg.ConnectRequest()
-
-    #     # Set up a timer so we can timeout if no connection is obtained in time
-    #     loop = asyncio.get_running_loop()
-    #     end_time = loop.time() + self._timeout
-    #     while loop.time() < end_time:
-    #         try:
-    #             self._conn = await self._stub.OpenConnection(req)  # type: ignore
-    #             return self
-    #         except aio.AioRpcError:
-    #             # We weren't able to establish a connection this try
-    #             continue
-    #     else:
-    #         raise client.NoServerConnection(f"after {self._timeout} seconds")
-
-    # XXX All but conn part
+    # Since this service is stateful, we need to also ensure we have obtained a session token
     def is_connected(self) -> bool:
-        """True if the client has an open connection on a ready channel"""
-        return (
-            self._conn is not None
-            and self._channel is not None
-            and self._channel.get_state() is ChannelConnectivity.READY
-        )
+        return super().is_connected() and self._conn is not None
 
     @client._requires_connection
     async def load_model(
         self,
         spec: client.Source.Input,
-        aux: Optional[Iterable[client.Source]] = None,
+        aux: Optional[Iterable[client.Source.Input]] = None,
     ) -> client.RpcResult[dict]:
         """Load a model into the connected session
 
@@ -155,7 +120,6 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
                 dictionary representing ther Apalache IR if successful, or a
                 `LoadModuleErr` if something something goes wrong.
         """
-
         aux_sources = aux or []
 
         resp: msg.LoadModelResponse = await self._stub.LoadModel(
@@ -171,21 +135,5 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
         else:
             return json.loads(resp.spec)
 
-    async def close(self) -> None:
-        """Close the client, cleaning up connections and channels"""
-        if (
-            self._channel is not None
-            and self._channel.get_state() is not ChannelConnectivity.SHUTDOWN
-        ):
-            await self._channel.close()
-        # TODO: Send RPC to terminate connection (just a courtesy for the server)
 
-
-# An `RpcMethod[P, T]` is an instance method of the `Chai` client, with any
-# paramters, `P`, and returning a value of type `RpcResult[T]`.
-#
-# For info on the typing mechanim here, see https://peps.python.org/pep-0612/
-#
-# NOTE: Must follow the definition of `Chai` in order to have that class in
-# scope.
-# RpcMethod = Callable[Concatenate[Chai, P], Awaitable[client.RpcResult[T]]]
+# TODO: Send RPC to terminate connection (just a courtesy for the server)

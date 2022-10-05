@@ -71,7 +71,7 @@ Foo == TRUE
     assert m["name"] == "M" and m["kind"] == "TlaModule"
 
 
-async def test_can_load_model_with_aux_modules(client: Chai) -> None:
+async def test_can_load_model_with_aux_modules(client: ChaiTransExplorer) -> None:
     spec = """
 ---- MODULE M ----
 EXTENDS A
@@ -91,7 +91,7 @@ FooA == TRUE
     assert any(d["name"] == "FooA" for d in m["declarations"])
 
 
-async def test_loading_invalid_model_gives_error(client: Chai) -> None:
+async def test_loading_invalid_model_gives_error(client: ChaiTransExplorer) -> None:
     spec = """
 ---- missing module declaration ----
 Foo == TRUE
