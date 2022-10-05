@@ -55,13 +55,13 @@ apalache:
 	cd apalache && nix develop -c bash -c "make package"
 
 lint:
-	flake8 .
-	black .
-	isort .
-	pyright .
+	poetry run flake8 .
+	poetry run black .
+	poetry run isort .
+	poetry run pyright .
 
 test:
-	poetry run pyright chai/ tests/
+	poetry run pyright chai/ tests/ integration-tests/
 	poetry run pytest -s tests/
 
 integration:
