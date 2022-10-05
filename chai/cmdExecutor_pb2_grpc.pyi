@@ -13,6 +13,11 @@ class CmdExecutorStub:
         chai.cmdExecutor_pb2.CmdRequest,
         chai.cmdExecutor_pb2.CmdResponse]
 
+    ping: grpc.UnaryUnaryMultiCallable[
+        chai.cmdExecutor_pb2.PingRequest,
+        chai.cmdExecutor_pb2.PongResponse]
+    """No-op to check service health"""
+
 
 class CmdExecutorServicer(metaclass=abc.ABCMeta):
     """A stateless serivce exposing Apalache's CLI via RPC calls"""
@@ -21,6 +26,14 @@ class CmdExecutorServicer(metaclass=abc.ABCMeta):
         request: chai.cmdExecutor_pb2.CmdRequest,
         context: grpc.ServicerContext,
     ) -> chai.cmdExecutor_pb2.CmdResponse: ...
+
+    @abc.abstractmethod
+    def ping(self,
+        request: chai.cmdExecutor_pb2.PingRequest,
+        context: grpc.ServicerContext,
+    ) -> chai.cmdExecutor_pb2.PongResponse:
+        """No-op to check service health"""
+        pass
 
 
 def add_CmdExecutorServicer_to_server(servicer: CmdExecutorServicer, server: grpc.Server) -> None: ...

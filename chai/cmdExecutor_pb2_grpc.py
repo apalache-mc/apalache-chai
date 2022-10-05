@@ -16,9 +16,14 @@ class CmdExecutorStub(object):
             channel: A grpc.Channel.
         """
         self.run = channel.unary_unary(
-                '/shai.CmdExecutor/run',
+                '/shai.cmdExecutor.CmdExecutor/run',
                 request_serializer=chai_dot_cmdExecutor__pb2.CmdRequest.SerializeToString,
                 response_deserializer=chai_dot_cmdExecutor__pb2.CmdResponse.FromString,
+                )
+        self.ping = channel.unary_unary(
+                '/shai.cmdExecutor.CmdExecutor/ping',
+                request_serializer=chai_dot_cmdExecutor__pb2.PingRequest.SerializeToString,
+                response_deserializer=chai_dot_cmdExecutor__pb2.PongResponse.FromString,
                 )
 
 
@@ -32,6 +37,13 @@ class CmdExecutorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ping(self, request, context):
+        """No-op to check service health
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_CmdExecutorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -40,9 +52,14 @@ def add_CmdExecutorServicer_to_server(servicer, server):
                     request_deserializer=chai_dot_cmdExecutor__pb2.CmdRequest.FromString,
                     response_serializer=chai_dot_cmdExecutor__pb2.CmdResponse.SerializeToString,
             ),
+            'ping': grpc.unary_unary_rpc_method_handler(
+                    servicer.ping,
+                    request_deserializer=chai_dot_cmdExecutor__pb2.PingRequest.FromString,
+                    response_serializer=chai_dot_cmdExecutor__pb2.PongResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'shai.CmdExecutor', rpc_method_handlers)
+            'shai.cmdExecutor.CmdExecutor', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -62,8 +79,25 @@ class CmdExecutor(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/shai.CmdExecutor/run',
+        return grpc.experimental.unary_unary(request, target, '/shai.cmdExecutor.CmdExecutor/run',
             chai_dot_cmdExecutor__pb2.CmdRequest.SerializeToString,
             chai_dot_cmdExecutor__pb2.CmdResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ping(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/shai.cmdExecutor.CmdExecutor/ping',
+            chai_dot_cmdExecutor__pb2.PingRequest.SerializeToString,
+            chai_dot_cmdExecutor__pb2.PongResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

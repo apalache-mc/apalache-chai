@@ -29,6 +29,18 @@ TYPECHECK: Cmd.ValueType  # 3
 global___Cmd = Cmd
 
 
+class PingRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    def __init__(self,
+        ) -> None: ...
+global___PingRequest = PingRequest
+
+class PongResponse(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    def __init__(self,
+        ) -> None: ...
+global___PongResponse = PongResponse
+
 class CmdRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     CMD_FIELD_NUMBER: builtins.int

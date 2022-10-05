@@ -15,14 +15,19 @@ class TransExplorerStub(object):
             channel: A grpc.Channel.
         """
         self.OpenConnection = channel.unary_unary(
-                '/shai.TransExplorer/OpenConnection',
+                '/shai.transExplorer.TransExplorer/OpenConnection',
                 request_serializer=chai_dot_transExplorer__pb2.ConnectRequest.SerializeToString,
                 response_deserializer=chai_dot_transExplorer__pb2.Connection.FromString,
                 )
         self.LoadModel = channel.unary_unary(
-                '/shai.TransExplorer/LoadModel',
+                '/shai.transExplorer.TransExplorer/LoadModel',
                 request_serializer=chai_dot_transExplorer__pb2.LoadModelRequest.SerializeToString,
                 response_deserializer=chai_dot_transExplorer__pb2.LoadModelResponse.FromString,
+                )
+        self.ping = channel.unary_unary(
+                '/shai.transExplorer.TransExplorer/ping',
+                request_serializer=chai_dot_transExplorer__pb2.PingRequest.SerializeToString,
+                response_deserializer=chai_dot_transExplorer__pb2.PongResponse.FromString,
                 )
 
 
@@ -42,6 +47,13 @@ class TransExplorerServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ping(self, request, context):
+        """No-op to check service health
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_TransExplorerServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -55,9 +67,14 @@ def add_TransExplorerServicer_to_server(servicer, server):
                     request_deserializer=chai_dot_transExplorer__pb2.LoadModelRequest.FromString,
                     response_serializer=chai_dot_transExplorer__pb2.LoadModelResponse.SerializeToString,
             ),
+            'ping': grpc.unary_unary_rpc_method_handler(
+                    servicer.ping,
+                    request_deserializer=chai_dot_transExplorer__pb2.PingRequest.FromString,
+                    response_serializer=chai_dot_transExplorer__pb2.PongResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'shai.TransExplorer', rpc_method_handlers)
+            'shai.transExplorer.TransExplorer', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -76,7 +93,7 @@ class TransExplorer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/shai.TransExplorer/OpenConnection',
+        return grpc.experimental.unary_unary(request, target, '/shai.transExplorer.TransExplorer/OpenConnection',
             chai_dot_transExplorer__pb2.ConnectRequest.SerializeToString,
             chai_dot_transExplorer__pb2.Connection.FromString,
             options, channel_credentials,
@@ -93,8 +110,25 @@ class TransExplorer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/shai.TransExplorer/LoadModel',
+        return grpc.experimental.unary_unary(request, target, '/shai.transExplorer.TransExplorer/LoadModel',
             chai_dot_transExplorer__pb2.LoadModelRequest.SerializeToString,
             chai_dot_transExplorer__pb2.LoadModelResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ping(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/shai.transExplorer.TransExplorer/ping',
+            chai_dot_transExplorer__pb2.PingRequest.SerializeToString,
+            chai_dot_transExplorer__pb2.PongResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
