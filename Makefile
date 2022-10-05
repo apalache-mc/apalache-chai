@@ -28,7 +28,7 @@ update-grpc: \
 $(CHAI_PROTO):
 	mkdir -p $(CHAI_PROTO)
 
-$(CHAI_PROTO)/%.proto: $(CHAI_PROTO)
+$(CHAI_PROTO)/%.proto: $(CHAI_PROTO) $(APALACHE_PROTO)/transExplorer.proto $(APALACHE_PROTO)/cmdExecutor.proto
 	cp $(APALACHE_PROTO)/$*.proto $(CHAI_PROTO)/$*.proto
 
 # The generated protobuf and gRPC code
