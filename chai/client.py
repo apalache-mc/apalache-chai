@@ -17,15 +17,13 @@ from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Generic, Optional, Protocol, TypeVar, Union
+from typing import Any, Generic, Optional, TypeVar, Union
+from typing_extensions import Self
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
 import grpc.aio as aio  # type: ignore
 from grpc import ChannelConnectivity
-from typing_extensions import Self
-
-from chai.transExplorer_pb2 import PingRequest
 
 #############
 # DATATYPES #
@@ -79,11 +77,6 @@ class RpcCallWithoutConnection(ChaiException):
 
 class NoServerConnection(ChaiException):
     """Raised if client cannot connect to server after timeout expires"""
-
-
-class HasPingRequest(Protocol):
-    def PingRequest(self) -> Any:
-        ...
 
 
 # For the type annotation of decorators, see
@@ -267,7 +260,7 @@ class Chai(Generic[Service], Awaitable, ABC):
         end_time = loop.time() + self._timeout
         while loop.time() < end_time:
             try:
-                await self._stub.ping(PingRequest)  # type: ignore
+                await self._stub.ping(self.PING_REQUEST)  # type: ignore
                 return self
             except aio.AioRpcError:
                 # We weren't able to establish a connection this try
