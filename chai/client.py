@@ -18,14 +18,14 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Generic, Optional, Protocol, TypeVar, Union
-from chai.transExplorer_pb2 import PingRequest
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
 import grpc.aio as aio  # type: ignore
 from grpc import ChannelConnectivity
-
 from typing_extensions import Self
+
+from chai.transExplorer_pb2 import PingRequest
 
 #############
 # DATATYPES #
@@ -49,7 +49,8 @@ class Source(str):
             return super().__new__(cls, source.read_text())
         else:
             raise ValueError(
-                f"Source can only be construced from a str or a Path, given {type(source)}"
+                "Source can only be construced from a str or a Path,"
+                f"given {type(source)}"
             )
 
 
@@ -201,7 +202,9 @@ class Chai(Generic[Service], Awaitable, ABC):
         self._channel_spec = f"{domain}:{port}"
         self._timeout = timeout
         self._channel: Optional[aio.Channel] = None
-        # Used to store the gRPC service stub provoding the lower-level gRPC functionality
+
+        # Used to store the gRPC service stub provoding the lower-level gRPC
+        # functionality
         self._stub: Service
 
     # We need the client to implement the await protocol for our async

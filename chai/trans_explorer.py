@@ -19,9 +19,9 @@ from typing import Optional, TypeVar
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
 import grpc.aio as aio  # type: ignore
 
+import chai.client as client
 import chai.transExplorer_pb2 as msg
 import chai.transExplorer_pb2_grpc as service
-import chai.client as client
 
 T = TypeVar("T")
 
@@ -87,17 +87,21 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
         """
         super().__init__(domain, port, timeout)
 
-        # A session token used by the server to track the state for this client's requets.
-        # This is required by the TransExplorer service since it is stateful.
+        # A session token used by the server to track the state for this
+        # client's requets.  This is required by the TransExplorer service since
+        # it is stateful.
         self._conn: Optional[msg.Connection]
 
     async def connect(self, channel: Optional[aio.Channel] = None) -> client.Chai:
         """Obtain a connection from the server"""
         await super().connect(channel)
-        self._conn = await self._stub.OpenConnection(msg.ConnectRequest())  # type: ignore
+        self._conn = await self._stub.OpenConnection(
+            msg.ConnectRequest()
+        )  # type: ignore
         return self
 
-    # Since this service is stateful, we need to also ensure we have obtained a session token
+    # Since this service is stateful, we need to also ensure we have obtained a
+    # session token
     def is_connected(self) -> bool:
         return super().is_connected() and self._conn is not None
 
