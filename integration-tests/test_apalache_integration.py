@@ -5,8 +5,8 @@ from subprocess import Popen
 
 import pytest
 
-from chai import Chai, NoServerConnection
-from chai.chai import LoadModuleErr, RpcCallWithoutConnection
+from chai import (ChaiTransExplorer, LoadModuleErr, NoServerConnection,
+                  RpcCallWithoutConnection)
 
 
 # Fixture to start and clean up Apalache's Shai server
@@ -34,20 +34,20 @@ def server() -> Iterator[Popen]:
 # NOTE: In contrast to the `server` fixture, we do want to create this once for
 # each test
 @pytest.fixture
-async def client(server: Popen) -> AsyncIterator[Chai]:
+async def client(server: Popen) -> AsyncIterator[ChaiTransExplorer]:
     # We need to ensure the server is created before we create the client
     _ = server
-    async with Chai.create() as client:
+    async with ChaiTransExplorer.create() as client:
         yield client
 
 
-async def test_can_obtain_a_connection(client: Chai) -> None:
+async def test_can_obtain_a_connection(client: ChaiTransExplorer) -> None:
     assert client.is_connected()
 
 
 async def test_raises_error_after_timeout() -> None:
     # configure the client to use a non-existent server
-    client = Chai(domain="invalid.domain", port=6666, timeout=0.5)
+    client = ChaiTransExplorer(domain="invalid.domain", port=6666, timeout=0.5)
     try:
         with pytest.raises(NoServerConnection):
             await client.connect()
@@ -55,7 +55,7 @@ async def test_raises_error_after_timeout() -> None:
         await client.close()
 
 
-async def test_can_load_model(client: Chai) -> None:
+async def test_can_load_model(client: ChaiTransExplorer) -> None:
     spec = """
 ---- MODULE M ----
 Foo == TRUE
@@ -67,7 +67,7 @@ Foo == TRUE
     assert m["name"] == "M" and m["kind"] == "TlaModule"
 
 
-async def test_can_load_model_with_aux_modules(client: Chai) -> None:
+async def test_can_load_model_with_aux_modules(client: ChaiTransExplorer) -> None:
     spec = """
 ---- MODULE M ----
 EXTENDS A
@@ -87,7 +87,7 @@ FooA == TRUE
     assert any(d["name"] == "FooA" for d in m["declarations"])
 
 
-async def test_loading_invalid_model_gives_error(client: Chai) -> None:
+async def test_loading_invalid_model_gives_error(client: ChaiTransExplorer) -> None:
     spec = """
 ---- missing module declaration ----
 Foo == TRUE
@@ -99,6 +99,6 @@ Foo == TRUE
 
 
 async def test_loading_model_on_client_without_connection_raises() -> None:
-    client = Chai()
+    client = ChaiTransExplorer()
     with pytest.raises(RpcCallWithoutConnection):
         await client.load_model("")

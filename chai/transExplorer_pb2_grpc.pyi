@@ -17,6 +17,11 @@ class TransExplorerStub:
         chai.transExplorer_pb2.LoadModelResponse]
     """TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}"""
 
+    ping: grpc.UnaryUnaryMultiCallable[
+        chai.transExplorer_pb2.PingRequest,
+        chai.transExplorer_pb2.PongResponse]
+    """No-op to check service health"""
+
 
 class TransExplorerServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -31,6 +36,14 @@ class TransExplorerServicer(metaclass=abc.ABCMeta):
         context: grpc.ServicerContext,
     ) -> chai.transExplorer_pb2.LoadModelResponse:
         """TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}"""
+        pass
+
+    @abc.abstractmethod
+    def ping(self,
+        request: chai.transExplorer_pb2.PingRequest,
+        context: grpc.ServicerContext,
+    ) -> chai.transExplorer_pb2.PongResponse:
+        """No-op to check service health"""
         pass
 
 

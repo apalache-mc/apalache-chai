@@ -81,7 +81,7 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          pyright chai/ tests/
+          pyright chai/ tests/ integration-tests/
           pytest -s tests/
 
   integration:

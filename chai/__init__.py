@@ -1,1 +1,2 @@
-from chai.chai import Chai, LoadModuleErr, NoServerConnection, RpcErr  # noqa
+from chai.client import NoServerConnection, RpcCallWithoutConnection, RpcErr  # noqa
+from chai.trans_explorer import ChaiTransExplorer, LoadModuleErr  # noqa
