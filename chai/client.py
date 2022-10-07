@@ -18,12 +18,12 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, Union
-from typing_extensions import Self
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
 import grpc.aio as aio  # type: ignore
 from grpc import ChannelConnectivity
+from typing_extensions import Self
 
 #############
 # DATATYPES #
