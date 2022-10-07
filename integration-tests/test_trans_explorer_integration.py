@@ -5,8 +5,12 @@ from subprocess import Popen
 
 import pytest
 
-from chai import (ChaiTransExplorer, LoadModuleErr, NoServerConnection,
-                  RpcCallWithoutConnection)
+from chai import (
+    ChaiTransExplorer,
+    LoadModuleErr,
+    NoServerConnection,
+    RpcCallWithoutConnection,
+)
 
 
 # Fixture to start and clean up Apalache's Shai server
