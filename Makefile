@@ -56,9 +56,8 @@ apalache:
 
 lint:
 	poetry run flake8 .
-	poetry run black .
 	poetry run isort .
-	poetry run pyright .
+	poetry run black . --check
 
 test:
 	poetry run pyright chai/ tests/ integration-tests/

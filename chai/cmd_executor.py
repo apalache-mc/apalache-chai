@@ -1,21 +1,20 @@
 """The gRPC client to interact with the CmdExeuctor service provided by
    Apalache's Shai server"""
 from __future__ import annotations
-from abc import ABC, abstractclassmethod, abstractmethod
 
-from dataclasses import dataclass
 import json
+from abc import ABC, abstractclassmethod
+from dataclasses import dataclass
 from typing import List, Optional, Tuple, TypeVar
-from typing_extensions import Self
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
 import grpc.aio as aio  # type: ignore
+from typing_extensions import Self
 
 import chai.client as client
 import chai.cmdExecutor_pb2 as msg
 import chai.cmdExecutor_pb2_grpc as service
-
 from chai.client import RpcResult
 
 Input = client.Source.Input

@@ -2,18 +2,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
 from subprocess import Popen
-from typing import Dict, List
+from typing import List
 
 import pytest
 
-from chai import (
-    ChaiCmdExecutor,
-    LoadModuleErr,
-    NoServerConnection,
-    RpcCallWithoutConnection,
-)
+from chai import ChaiCmdExecutor
 from chai.client import Source
-from chai.cmd_executor import CheckingError, CmdExecutorError
+from chai.cmd_executor import CheckingError
 
 
 # Fixture to start and clean up Apalache's Shai server
