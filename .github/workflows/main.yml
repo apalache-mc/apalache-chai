@@ -108,7 +108,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-sbt-${{ hashFiles('project/Dependencies.scala') }}
+          key: ${{ runner.os }}-sbt-${{ hashFiles('apalache/project/Dependencies.scala') }}
           restore-keys: |
             ${{ runner.os }}-sbt-
             ${{ runner.os }}-
