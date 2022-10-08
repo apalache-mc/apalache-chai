@@ -6,9 +6,9 @@ from typing import List
 
 import pytest
 
-from chai import ChaiCmdExecutor
+from chai import ChaiCmdExecutor, CheckingError, TypecheckingError
 from chai.client import Source
-from chai.cmd_executor import CheckingError
+from chai.cmd_executor import ParsingError
 
 
 # Fixture to start and clean up Apalache's Shai server
@@ -81,7 +81,7 @@ Init == TRUE
     assert any(d["name"].startswith("Init") for d in decls)
 
 
-async def test_deadlocked_model_returns_deadlock_checking_error(
+async def test_checking_deadlocked_model_returns_deadlock_checking_error(
     client: ChaiCmdExecutor,
 ) -> None:
     spec = """
@@ -95,7 +95,7 @@ Next == FALSE
     assert res.checking_result == "Deadlock"
 
 
-async def test_invalid_model_returns_validation_checking_error(
+async def test_checking_invalid_model_returns_validation_checking_error(
     client: ChaiCmdExecutor,
 ) -> None:
     spec = r"""
@@ -116,3 +116,39 @@ Inv == x
     assert res.checking_result == "Error"
     states = res.counter_example[0]["states"][1]
     assert states == {"#meta": {"index": 1}, "x": False, "y": True}
+
+
+async def test_checking_model_with_type_errors_returns_type_error(
+    client: ChaiCmdExecutor,
+) -> None:
+    spec = r"""
+---- MODULE M ----
+VARIABLES
+    \* @type: Bool;
+    x
+
+Init == x = "foo"
+Next == TRUE
+====
+"""
+    res = await client.check(spec)
+    print(res)
+    assert isinstance(res, TypecheckingError)
+    # Errors look something like:
+    # [['M.tla:7:9-7:17', 'Arguments to = should have the same type. For arguments x, "foo" with types Bool, Str, in expression x = "foo"'],
+    #  ['M.tla:7:1-7:17', 'Error when computing the type of Init']]
+    assert len(res.errors) == 2
+
+
+# TODO: Requires a fix in Apalache's pass error reporting
+# async def test_checking_model_with_invalid_syntax_returns_parsing_error(
+#     client: ChaiCmdExecutor,
+# ) -> None:
+#     spec = r"""
+# ---- MODULE M ----
+# Foo = x
+# ====
+# """
+#     res = await client.check(spec)
+#     print(res)
+#     assert isinstance(res, ParsingError)
