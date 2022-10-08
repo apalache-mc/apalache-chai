@@ -8,7 +8,6 @@ import pytest
 
 from chai import ChaiCmdExecutor, CheckingError, TypecheckingError
 from chai.client import Source
-from chai.cmd_executor import ParsingError
 
 
 # Fixture to start and clean up Apalache's Shai server
@@ -135,7 +134,7 @@ Next == TRUE
     print(res)
     assert isinstance(res, TypecheckingError)
     # Errors look something like:
-    # [['M.tla:7:9-7:17', 'Arguments to = should have the same type. For arguments x, "foo" with types Bool, Str, in expression x = "foo"'],
+    # [['M.tla:7:9-7:17', 'Arguments to = should have the same type. For arguments x, "foo" with types Bool, Str, in expression x = "foo"'], # noqa
     #  ['M.tla:7:1-7:17', 'Error when computing the type of Init']]
     assert len(res.errors) == 2
 

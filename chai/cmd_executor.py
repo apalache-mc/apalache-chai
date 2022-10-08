@@ -29,7 +29,7 @@ class UnexpectedErrorException(Exception):
 
 @dataclass
 class CmdExecutorError(ABC):
-    """The base class for known application errors returned by the CmdExecutor service
+    """Base class for known application errors
 
     Attributes:
         pass_name: The name of the processing pass that produced the error.
@@ -100,7 +100,9 @@ class CheckingError(CmdExecutorError):
     """Records a model checking error
 
     Attributes:
-        checking_result: The kind of model checking result. The possible result kinds are
+        checking_result: The kind of model checking result. The possible result
+            kinds are as follows
+
             - Error: A checking violation is found.
             - Deadlock: A deadlock was found.
             - RuntimeError: A runtime error was encountered, preventing checking.
@@ -200,7 +202,7 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             spec: The root module, as a string or path to a file.
             aux: Auxiliary modules extended by the root module.
             config: Application configuration, as documented in `Apalache's
-                Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_
+                Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
         """
         resp: msg.CmdResponse = await self._stub.run(
             msg.CmdRequest(cmd=msg.Cmd.CHECK, config=_config_json(spec, aux, config))
