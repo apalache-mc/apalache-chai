@@ -53,8 +53,12 @@ class Source(str):
 
 
 @dataclass
-class RpcErr:
-    """The base type of application errors returned from an RPC call"""
+class RpcErr(ABC):
+    """The abstract base class of application errors returned from an RPC call
+
+    Attributes:
+        msg: A message explaining the error.
+    """
 
     msg: str
 

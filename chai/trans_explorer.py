@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import Optional, TypeVar
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
@@ -26,8 +27,11 @@ import chai.transExplorer_pb2_grpc as service
 T = TypeVar("T")
 
 
+@dataclass
 class LoadModuleErr(client.RpcErr):
     """Represents an error when loading a module (e.g., a parse error)"""
+
+    msg: str
 
 
 class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):

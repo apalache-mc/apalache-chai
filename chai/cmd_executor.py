@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import json
-from abc import ABC, abstractclassmethod
-from dataclasses import dataclass
-from typing import List, Optional, Tuple, TypeVar
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple, TypeVar, Union
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
 import grpc.aio as aio  # type: ignore
-from typing_extensions import Self
 
 import chai.client as client
 import chai.cmdExecutor_pb2 as msg
 import chai.cmdExecutor_pb2_grpc as service
-from chai.client import RpcResult
 
 Input = client.Source.Input
 # Derived from JSON encodings
@@ -28,24 +25,14 @@ class UnexpectedErrorException(Exception):
 
 
 @dataclass
-class CmdExecutorError(ABC):
-    """Base class for known application errors
+class CmdExecutorError(client.RpcErr):
+    """Base class for known application errors from the CmdExecutor service
 
     Attributes:
         pass_name: The name of the processing pass that produced the error.
     """
 
     pass_name: str
-
-    # Derive an error from decoded JSON
-    @abstractclassmethod
-    def _of_dict(cls, _: dict) -> Self:
-        ...
-
-
-def _ensure_is_pass_failure(d: dict) -> None:
-    if d["error_type"] != "pass_failure":
-        raise UnexpectedErrorException(f"Unexpected error receieved from RPC call: {d}")
 
 
 @dataclass
@@ -56,20 +43,9 @@ class ParsingError(CmdExecutorError):
         errors: A list of parsing error messages.
     """
 
+    # Set the `msg` field, but don't expose it as settable field in the constructor
+    msg: str = field(default="Encountered a parsing error", init=False)
     errors: List[str]
-
-    @classmethod
-    def _of_dict(cls, d: dict) -> ParsingError:
-        _ensure_is_pass_failure(d)
-
-        data = d["data"]
-        pass_name = data["pass_name"]
-        if pass_name == "SanyParser":
-            return ParsingError(pass_name, data)
-        else:
-            raise UnexpectedErrorException(
-                f"Unexpected error receieved from RPC call: {d}"
-            )
 
 
 @dataclass
@@ -81,18 +57,9 @@ class TypecheckingError(CmdExecutorError):
             messages.
     """
 
+    # Set the `msg` field, but don't expose it as settable field in the constructor
+    msg: str = field(default="Encountered a typechecking error", init=False)
     errors: List[Tuple[str, str]]  # location, msg errors
-
-    @classmethod
-    def _of_dict(cls, d: dict) -> ParsingError | TypecheckingError:
-        _ensure_is_pass_failure(d)
-
-        pass_name = d["data"]["pass_name"]
-        errors = d["data"]["error_data"]
-        if pass_name == "TypeCheckerSnowcat":
-            return TypecheckingError(pass_name, errors)
-        else:
-            return ParsingError._of_dict(d)
 
 
 @dataclass
@@ -109,41 +76,80 @@ class CheckingError(CmdExecutorError):
         counter_examples: A list of counterexamples found.
     """
 
+    # Set the `msg` field, but don't expose it as settable field in the constructor
+    msg: str = field(default="Encountered a model checking error", init=False)
     checking_result: str
     counter_example: List[Counterexample]
 
-    @classmethod
-    def _of_dict(cls, d: dict) -> ParsingError | TypecheckingError | CheckingError:
-        _ensure_is_pass_failure(d)
 
-        error_data = d["data"]["error_data"]
-        pass_name = d["data"]["pass_name"]
-        if pass_name == "BoundedChecker":
-            checking_result = error_data["checking_result"]
-            if checking_result == "Deadlock":
-                # TODO We should use the same key for both counterexamples
-                counter_examples = error_data["counterexample"]
-            else:
-                counter_examples = error_data["counterexamples"]
-            # TODO Handle all other checking errors
-            return CheckingError(pass_name, checking_result, counter_examples)
+Err = TypeVar("Err")
+
+# Results returned by `ChaiCmdExecutor` methods, parameterized on `Err`,
+# the application errors they can return
+CmdExecutorResult = Union[Err, TlaModule]
+
+# The application errors that can be returned by the `parse` method
+CmdExecutorParseError = ParsingError
+
+# The application errors that can be returned by the `typecheck` method
+CmdExecutorTypecheckError = TypecheckingError | CmdExecutorParseError
+
+# The application errors that can be returned by the `check` method
+CmdExecutorCheckError = CheckingError | CmdExecutorTypecheckError
+
+
+def _ensure_is_pass_failure(d: dict) -> None:
+    if d["error_type"] != "pass_failure":
+        raise UnexpectedErrorException(f"Unexpected error receieved from RPC call: {d}")
+
+
+def _parse_err_of_dict(d: dict) -> CmdExecutorParseError:
+    _ensure_is_pass_failure(d)
+
+    data = d["data"]
+    pass_name = data["pass_name"]
+    if pass_name == "SanyParser":
+        return ParsingError(pass_name, data)
+    else:
+        raise UnexpectedErrorException(f"Unexpected error receieved from RPC call: {d}")
+
+
+def _typechecking_err_of_dict(d: dict) -> CmdExecutorTypecheckError:
+    _ensure_is_pass_failure(d)
+
+    pass_name = d["data"]["pass_name"]
+    errors = d["data"]["error_data"]
+    if pass_name == "TypeCheckerSnowcat":
+        return TypecheckingError(pass_name, errors)
+    else:
+        return _parse_err_of_dict(d)
+
+
+def _checking_err_of_dict(d: dict) -> CmdExecutorCheckError:
+    _ensure_is_pass_failure(d)
+
+    error_data = d["data"]["error_data"]
+    pass_name = d["data"]["pass_name"]
+    if pass_name == "BoundedChecker":
+        checking_result = error_data["checking_result"]
+        if checking_result == "Deadlock":
+            # TODO We should use the same key for both counterexamples
+            counter_examples = error_data["counterexample"]
         else:
-            return TypecheckingError._of_dict(d)
-
-
-E = TypeVar("E")
-CmdExecutorResult = RpcResult[E | TlaModule]
-
-
-def _str_source(spec, aux):
-    return {"source": {"type": "string", "content": spec, "aux": aux}}
+            counter_examples = error_data["counterexamples"]
+        # TODO Handle all other checking errors
+        return CheckingError(pass_name, checking_result, counter_examples)
+    else:
+        return _typechecking_err_of_dict(d)
 
 
 def _config_json(spec: Input, aux: Optional[List[Input]], cfg: Optional[dict]) -> str:
     # TODO: error if source already set in config?
     aux = aux or []
     config = cfg or {}
-    return json.dumps(config | {"input": _str_source(spec, aux)})
+    return json.dumps(
+        config | {"input": {"source": {"type": "string", "content": spec, "aux": aux}}}
+    )
 
 
 class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
@@ -195,7 +201,7 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
         spec: client.Source.Input,
         aux: Optional[List[client.Source.Input]] = None,
         config: Optional[dict] = None,
-    ) -> CmdExecutorResult[ParsingError | TypecheckingError | CheckingError]:
+    ) -> CmdExecutorResult[CmdExecutorCheckError]:
         """Model check a TLA spec
 
         Args:
@@ -208,18 +214,18 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             msg.CmdRequest(cmd=msg.Cmd.CHECK, config=_config_json(spec, aux, config))
         )  # type: ignore
         if resp.HasField("failure"):
-            return CheckingError._of_dict(json.loads(resp.failure))
+            return _checking_err_of_dict(json.loads(resp.failure))
         else:
             return json.loads(resp.success)
 
     @client._requires_connection
     async def parse(
         self, module: str, aux: List[str], config: dict
-    ) -> RpcResult[CmdExecutorResult[ParsingError]]:
+    ) -> CmdExecutorResult[CmdExecutorParseError]:
         ...
 
     @client._requires_connection
     async def typecheck(
         self, module: str, aux: List[str], config: dict
-    ) -> RpcResult[CmdExecutorResult[ParsingError]]:
+    ) -> CmdExecutorResult[CmdExecutorTypecheckError]:
         ...
