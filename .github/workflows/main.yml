@@ -34,7 +34,7 @@ jobs:
       fail-fast: true
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.10"]
     runs-on: ${{ matrix.os }}
     steps:
       #----------------------------------------------
@@ -89,7 +89,7 @@ jobs:
       fail-fast: true
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
-        python-version: ["3.9"]
+        python-version: ["3.10"]
     runs-on: ${{ matrix.os }}
     steps:
       #----------------------------------------------
@@ -108,7 +108,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-sbt-${{ hashFiles('project/Dependencies.scala') }}
+          key: ${{ runner.os }}-sbt-${{ hashFiles('apalache/project/Dependencies.scala') }}
           restore-keys: |
             ${{ runner.os }}-sbt-
             ${{ runner.os }}-
