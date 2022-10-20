@@ -8,11 +8,11 @@ import grpc
 
 class TransExplorerStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
-    OpenConnection: grpc.UnaryUnaryMultiCallable[
+    openConnection: grpc.UnaryUnaryMultiCallable[
         chai.transExplorer_pb2.ConnectRequest,
         chai.transExplorer_pb2.Connection]
 
-    LoadModel: grpc.UnaryUnaryMultiCallable[
+    loadModel: grpc.UnaryUnaryMultiCallable[
         chai.transExplorer_pb2.LoadModelRequest,
         chai.transExplorer_pb2.LoadModelResponse]
     """TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}"""
@@ -25,13 +25,13 @@ class TransExplorerStub:
 
 class TransExplorerServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def OpenConnection(self,
+    def openConnection(self,
         request: chai.transExplorer_pb2.ConnectRequest,
         context: grpc.ServicerContext,
     ) -> chai.transExplorer_pb2.Connection: ...
 
     @abc.abstractmethod
-    def LoadModel(self,
+    def loadModel(self,
         request: chai.transExplorer_pb2.LoadModelRequest,
         context: grpc.ServicerContext,
     ) -> chai.transExplorer_pb2.LoadModelResponse:

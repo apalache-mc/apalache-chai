@@ -5,11 +5,27 @@ isort:skip_file
 import builtins
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
+import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import typing
 import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
+
+class _TransExplorerErrorType:
+    ValueType = typing.NewType('ValueType', builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+class _TransExplorerErrorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_TransExplorerErrorType.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    PASS_FAILURE: _TransExplorerErrorType.ValueType  # 0
+    UNEXPECTED: _TransExplorerErrorType.ValueType  # 1
+class TransExplorerErrorType(_TransExplorerErrorType, metaclass=_TransExplorerErrorTypeEnumTypeWrapper):
+    pass
+
+PASS_FAILURE: TransExplorerErrorType.ValueType  # 0
+UNEXPECTED: TransExplorerErrorType.ValueType  # 1
+global___TransExplorerErrorType = TransExplorerErrorType
+
 
 class PingRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
@@ -68,6 +84,20 @@ class LoadModelRequest(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["aux",b"aux","conn",b"conn","spec",b"spec"]) -> None: ...
 global___LoadModelRequest = LoadModelRequest
 
+class TransExplorerError(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    ERRORTYPE_FIELD_NUMBER: builtins.int
+    DATA_FIELD_NUMBER: builtins.int
+    errorType: global___TransExplorerErrorType.ValueType
+    data: typing.Text
+    def __init__(self,
+        *,
+        errorType: global___TransExplorerErrorType.ValueType = ...,
+        data: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data",b"data","errorType",b"errorType"]) -> None: ...
+global___TransExplorerError = TransExplorerError
+
 class LoadModelResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     SPEC_FIELD_NUMBER: builtins.int
@@ -75,13 +105,14 @@ class LoadModelResponse(google.protobuf.message.Message):
     spec: typing.Text
     """A JSON encoded string with the Apalache IR representation of the loaded spec"""
 
-    err: typing.Text
-    """A string describing the error, if parsing fails"""
-
+    @property
+    def err(self) -> global___TransExplorerError:
+        """A string describing the error, if parsing fails"""
+        pass
     def __init__(self,
         *,
         spec: typing.Text = ...,
-        err: typing.Text = ...,
+        err: typing.Optional[global___TransExplorerError] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["err",b"err","result",b"result","spec",b"spec"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing_extensions.Literal["err",b"err","result",b"result","spec",b"spec"]) -> None: ...

@@ -14,13 +14,13 @@ class TransExplorerStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.OpenConnection = channel.unary_unary(
-                '/shai.transExplorer.TransExplorer/OpenConnection',
+        self.openConnection = channel.unary_unary(
+                '/shai.transExplorer.TransExplorer/openConnection',
                 request_serializer=chai_dot_transExplorer__pb2.ConnectRequest.SerializeToString,
                 response_deserializer=chai_dot_transExplorer__pb2.Connection.FromString,
                 )
-        self.LoadModel = channel.unary_unary(
-                '/shai.transExplorer.TransExplorer/LoadModel',
+        self.loadModel = channel.unary_unary(
+                '/shai.transExplorer.TransExplorer/loadModel',
                 request_serializer=chai_dot_transExplorer__pb2.LoadModelRequest.SerializeToString,
                 response_deserializer=chai_dot_transExplorer__pb2.LoadModelResponse.FromString,
                 )
@@ -34,13 +34,13 @@ class TransExplorerStub(object):
 class TransExplorerServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def OpenConnection(self, request, context):
+    def openConnection(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def LoadModel(self, request, context):
+    def loadModel(self, request, context):
         """TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -57,13 +57,13 @@ class TransExplorerServicer(object):
 
 def add_TransExplorerServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'OpenConnection': grpc.unary_unary_rpc_method_handler(
-                    servicer.OpenConnection,
+            'openConnection': grpc.unary_unary_rpc_method_handler(
+                    servicer.openConnection,
                     request_deserializer=chai_dot_transExplorer__pb2.ConnectRequest.FromString,
                     response_serializer=chai_dot_transExplorer__pb2.Connection.SerializeToString,
             ),
-            'LoadModel': grpc.unary_unary_rpc_method_handler(
-                    servicer.LoadModel,
+            'loadModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.loadModel,
                     request_deserializer=chai_dot_transExplorer__pb2.LoadModelRequest.FromString,
                     response_serializer=chai_dot_transExplorer__pb2.LoadModelResponse.SerializeToString,
             ),
@@ -83,7 +83,7 @@ class TransExplorer(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def OpenConnection(request,
+    def openConnection(request,
             target,
             options=(),
             channel_credentials=None,
@@ -93,14 +93,14 @@ class TransExplorer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/shai.transExplorer.TransExplorer/OpenConnection',
+        return grpc.experimental.unary_unary(request, target, '/shai.transExplorer.TransExplorer/openConnection',
             chai_dot_transExplorer__pb2.ConnectRequest.SerializeToString,
             chai_dot_transExplorer__pb2.Connection.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def LoadModel(request,
+    def loadModel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -110,7 +110,7 @@ class TransExplorer(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/shai.transExplorer.TransExplorer/LoadModel',
+        return grpc.experimental.unary_unary(request, target, '/shai.transExplorer.TransExplorer/loadModel',
             chai_dot_transExplorer__pb2.LoadModelRequest.SerializeToString,
             chai_dot_transExplorer__pb2.LoadModelResponse.FromString,
             options, channel_credentials,
