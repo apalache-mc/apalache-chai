@@ -99,7 +99,7 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
     async def connect(self, channel: Optional[aio.Channel] = None) -> client.Chai:
         """Obtain a connection from the server"""
         await super().connect(channel)
-        self._conn = await self._stub.OpenConnection(
+        self._conn = await self._stub.openConnection(
             msg.ConnectRequest()
         )  # type: ignore
         return self
@@ -130,7 +130,7 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
         """
         aux_sources = aux or []
 
-        resp: msg.LoadModelResponse = await self._stub.LoadModel(
+        resp: msg.LoadModelResponse = await self._stub.loadModel(
             msg.LoadModelRequest(
                 conn=self._conn,
                 spec=client.Source(spec),
@@ -139,7 +139,8 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
         )  # type: ignore
 
         if resp.HasField("err"):
-            return LoadModuleErr(resp.err)
+            err: msg.TransExplorerError = resp.err
+            return LoadModuleErr(err.data)
         else:
             return json.loads(resp.spec)
 

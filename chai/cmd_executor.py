@@ -98,49 +98,39 @@ CmdExecutorTypecheckError = TypecheckingError | CmdExecutorParseError
 CmdExecutorCheckError = CheckingError | CmdExecutorTypecheckError
 
 
-def _ensure_is_pass_failure(d: dict) -> None:
-    if d["error_type"] != "pass_failure":
-        raise UnexpectedErrorException(f"Unexpected error receieved from RPC call: {d}")
-
-
-def _parse_err_of_dict(d: dict) -> CmdExecutorParseError:
-    _ensure_is_pass_failure(d)
-
-    data = d["data"]
+def _parse_err(data: dict) -> CmdExecutorParseError:
+    data = data["data"]
     pass_name = data["pass_name"]
     if pass_name == "SanyParser":
-        return ParsingError(pass_name, data)
+        return ParsingError(pass_name, data["error_data"])
     else:
-        raise UnexpectedErrorException(f"Unexpected error receieved from RPC call: {d}")
+        raise UnexpectedErrorException(
+            f"Unexpected error receieved from RPC call: {data['msg']}"
+        )
 
 
-def _typechecking_err_of_dict(d: dict) -> CmdExecutorTypecheckError:
-    _ensure_is_pass_failure(d)
-
-    pass_name = d["data"]["pass_name"]
-    errors = d["data"]["error_data"]
+def _typechecking_err(data: dict) -> CmdExecutorTypecheckError:
+    pass_name = data["pass_name"]
     if pass_name == "TypeCheckerSnowcat":
-        return TypecheckingError(pass_name, errors)
+        return TypecheckingError(pass_name, data["error_data"])
     else:
-        return _parse_err_of_dict(d)
+        return _parse_err(data)
 
 
-def _checking_err_of_dict(d: dict) -> CmdExecutorCheckError:
-    _ensure_is_pass_failure(d)
-
-    error_data = d["data"]["error_data"]
-    pass_name = d["data"]["pass_name"]
+def _checking_err(data: dict) -> CmdExecutorCheckError:
+    pass_name = data["pass_name"]
     if pass_name == "BoundedChecker":
+        error_data = data["error_data"]
         checking_result = error_data["checking_result"]
         if checking_result == "Deadlock":
             # TODO We should use the same key for both counterexamples
-            counter_examples = error_data["counterexample"]
+            counter_examples = error_data["counterexamples"]
         else:
             counter_examples = error_data["counterexamples"]
         # TODO Handle all other checking errors
         return CheckingError(pass_name, checking_result, counter_examples)
     else:
-        return _typechecking_err_of_dict(d)
+        return _typechecking_err(data)
 
 
 def _config_json(spec: Input, aux: Optional[List[Input]], cfg: Optional[dict]) -> str:
@@ -214,7 +204,13 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             msg.CmdRequest(cmd=msg.Cmd.CHECK, config=_config_json(spec, aux, config))
         )  # type: ignore
         if resp.HasField("failure"):
-            return _checking_err_of_dict(json.loads(resp.failure))
+            err: msg.CmdError = resp.failure
+            err_data = json.loads(err.data)
+            if err.errorType == msg.UNEXPECTED:
+                raise UnexpectedErrorException(
+                    f"Unexpected error receieved from RPC call: {err_data['msg']}"
+                )
+            return _checking_err(err_data)
         else:
             return json.loads(resp.success)
 
