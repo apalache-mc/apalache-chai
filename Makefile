@@ -23,7 +23,8 @@ update-grpc: \
   chai/cmdExecutor_pb2.py \
   chai/cmdExecutor_pb2_grpc.py \
   chai/cmdExecutor_pb2.pyi \
-  chai/cmdExecutor_pb2_grpc.pyi
+  chai/cmdExecutor_pb2_grpc.pyi \
+	apalache
 
 $(CHAI_PROTO):
 	mkdir -p $(CHAI_PROTO)
