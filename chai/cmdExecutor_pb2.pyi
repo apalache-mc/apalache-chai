@@ -29,6 +29,21 @@ TYPECHECK: Cmd.ValueType  # 3
 global___Cmd = Cmd
 
 
+class _CmdErrorType:
+    ValueType = typing.NewType('ValueType', builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+class _CmdErrorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_CmdErrorType.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    PASS_FAILURE: _CmdErrorType.ValueType  # 0
+    UNEXPECTED: _CmdErrorType.ValueType  # 1
+class CmdErrorType(_CmdErrorType, metaclass=_CmdErrorTypeEnumTypeWrapper):
+    pass
+
+PASS_FAILURE: CmdErrorType.ValueType  # 0
+UNEXPECTED: CmdErrorType.ValueType  # 1
+global___CmdErrorType = CmdErrorType
+
+
 class PingRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     def __init__(self,
@@ -57,6 +72,22 @@ class CmdRequest(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["cmd",b"cmd","config",b"config"]) -> None: ...
 global___CmdRequest = CmdRequest
 
+class CmdError(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+    ERRORTYPE_FIELD_NUMBER: builtins.int
+    DATA_FIELD_NUMBER: builtins.int
+    errorType: global___CmdErrorType.ValueType
+    data: typing.Text
+    """A JSON encoded string with data useful for understanding the error"""
+
+    def __init__(self,
+        *,
+        errorType: global___CmdErrorType.ValueType = ...,
+        data: typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data",b"data","errorType",b"errorType"]) -> None: ...
+global___CmdError = CmdError
+
 class CmdResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
     SUCCESS_FIELD_NUMBER: builtins.int
@@ -64,13 +95,14 @@ class CmdResponse(google.protobuf.message.Message):
     success: typing.Text
     """A JSON encoded string with data useful on success"""
 
-    failure: typing.Text
-    """A JSON encoded string with data useful on error"""
-
+    @property
+    def failure(self) -> global___CmdError:
+        """Data about the kind of application error resulting from the RPC"""
+        pass
     def __init__(self,
         *,
         success: typing.Text = ...,
-        failure: typing.Text = ...,
+        failure: typing.Optional[global___CmdError] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["failure",b"failure","result",b"result","success",b"success"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing_extensions.Literal["failure",b"failure","result",b"result","success",b"success"]) -> None: ...

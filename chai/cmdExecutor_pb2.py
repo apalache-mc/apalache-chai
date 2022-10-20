@@ -15,18 +15,23 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16\x63hai/cmdExecutor.proto\x12\x10shai.cmdExecutor\"\r\n\x0bPingRequest\"\x0e\n\x0cPongResponse\"@\n\nCmdRequest\x12\"\n\x03\x63md\x18\x01 \x01(\x0e\x32\x15.shai.cmdExecutor.Cmd\x12\x0e\n\x06\x63onfig\x18\x02 \x01(\t\"=\n\x0b\x43mdResponse\x12\x11\n\x07success\x18\x01 \x01(\tH\x00\x12\x11\n\x07\x66\x61ilure\x18\x02 \x01(\tH\x00\x42\x08\n\x06result**\n\x03\x43md\x12\t\n\x05PARSE\x10\x00\x12\t\n\x05\x43HECK\x10\x01\x12\r\n\tTYPECHECK\x10\x03\x32\x98\x01\n\x0b\x43mdExecutor\x12\x42\n\x03run\x12\x1c.shai.cmdExecutor.CmdRequest\x1a\x1d.shai.cmdExecutor.CmdResponse\x12\x45\n\x04ping\x12\x1d.shai.cmdExecutor.PingRequest\x1a\x1e.shai.cmdExecutor.PongResponseB7\n\x1b\x61t.forsyte.apalache.shai.v1B\x10\x43mdExecutorProtoP\x01\xa2\x02\x03TEPb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16\x63hai/cmdExecutor.proto\x12\x10shai.cmdExecutor\"\r\n\x0bPingRequest\"\x0e\n\x0cPongResponse\"@\n\nCmdRequest\x12\"\n\x03\x63md\x18\x01 \x01(\x0e\x32\x15.shai.cmdExecutor.Cmd\x12\x0e\n\x06\x63onfig\x18\x02 \x01(\t\"K\n\x08\x43mdError\x12\x31\n\terrorType\x18\x01 \x01(\x0e\x32\x1e.shai.cmdExecutor.CmdErrorType\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\t\"Y\n\x0b\x43mdResponse\x12\x11\n\x07success\x18\x01 \x01(\tH\x00\x12-\n\x07\x66\x61ilure\x18\x02 \x01(\x0b\x32\x1a.shai.cmdExecutor.CmdErrorH\x00\x42\x08\n\x06result**\n\x03\x43md\x12\t\n\x05PARSE\x10\x00\x12\t\n\x05\x43HECK\x10\x01\x12\r\n\tTYPECHECK\x10\x03*0\n\x0c\x43mdErrorType\x12\x10\n\x0cPASS_FAILURE\x10\x00\x12\x0e\n\nUNEXPECTED\x10\x01\x32\x98\x01\n\x0b\x43mdExecutor\x12\x42\n\x03run\x12\x1c.shai.cmdExecutor.CmdRequest\x1a\x1d.shai.cmdExecutor.CmdResponse\x12\x45\n\x04ping\x12\x1d.shai.cmdExecutor.PingRequest\x1a\x1e.shai.cmdExecutor.PongResponseB7\n\x1b\x61t.forsyte.apalache.shai.v1B\x10\x43mdExecutorProtoP\x01\xa2\x02\x03TEPb\x06proto3')
 
 _CMD = DESCRIPTOR.enum_types_by_name['Cmd']
 Cmd = enum_type_wrapper.EnumTypeWrapper(_CMD)
+_CMDERRORTYPE = DESCRIPTOR.enum_types_by_name['CmdErrorType']
+CmdErrorType = enum_type_wrapper.EnumTypeWrapper(_CMDERRORTYPE)
 PARSE = 0
 CHECK = 1
 TYPECHECK = 3
+PASS_FAILURE = 0
+UNEXPECTED = 1
 
 
 _PINGREQUEST = DESCRIPTOR.message_types_by_name['PingRequest']
 _PONGRESPONSE = DESCRIPTOR.message_types_by_name['PongResponse']
 _CMDREQUEST = DESCRIPTOR.message_types_by_name['CmdRequest']
+_CMDERROR = DESCRIPTOR.message_types_by_name['CmdError']
 _CMDRESPONSE = DESCRIPTOR.message_types_by_name['CmdResponse']
 PingRequest = _reflection.GeneratedProtocolMessageType('PingRequest', (_message.Message,), {
   'DESCRIPTOR' : _PINGREQUEST,
@@ -49,6 +54,13 @@ CmdRequest = _reflection.GeneratedProtocolMessageType('CmdRequest', (_message.Me
   })
 _sym_db.RegisterMessage(CmdRequest)
 
+CmdError = _reflection.GeneratedProtocolMessageType('CmdError', (_message.Message,), {
+  'DESCRIPTOR' : _CMDERROR,
+  '__module__' : 'chai.cmdExecutor_pb2'
+  # @@protoc_insertion_point(class_scope:shai.cmdExecutor.CmdError)
+  })
+_sym_db.RegisterMessage(CmdError)
+
 CmdResponse = _reflection.GeneratedProtocolMessageType('CmdResponse', (_message.Message,), {
   'DESCRIPTOR' : _CMDRESPONSE,
   '__module__' : 'chai.cmdExecutor_pb2'
@@ -61,16 +73,20 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'\n\033at.forsyte.apalache.shai.v1B\020CmdExecutorProtoP\001\242\002\003TEP'
-  _CMD._serialized_start=204
-  _CMD._serialized_end=246
+  _CMD._serialized_start=309
+  _CMD._serialized_end=351
+  _CMDERRORTYPE._serialized_start=353
+  _CMDERRORTYPE._serialized_end=401
   _PINGREQUEST._serialized_start=44
   _PINGREQUEST._serialized_end=57
   _PONGRESPONSE._serialized_start=59
   _PONGRESPONSE._serialized_end=73
   _CMDREQUEST._serialized_start=75
   _CMDREQUEST._serialized_end=139
-  _CMDRESPONSE._serialized_start=141
-  _CMDRESPONSE._serialized_end=202
-  _CMDEXECUTOR._serialized_start=249
-  _CMDEXECUTOR._serialized_end=401
+  _CMDERROR._serialized_start=141
+  _CMDERROR._serialized_end=216
+  _CMDRESPONSE._serialized_start=218
+  _CMDRESPONSE._serialized_end=307
+  _CMDEXECUTOR._serialized_start=404
+  _CMDEXECUTOR._serialized_end=556
 # @@protoc_insertion_point(module_scope)
