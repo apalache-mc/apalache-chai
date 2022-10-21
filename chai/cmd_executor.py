@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple, TypeVar, Union
+from typing import Callable, List, Optional, Tuple, TypeVar, Union
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
@@ -82,6 +82,14 @@ class CheckingError(CmdExecutorError):
     counter_example: List[Counterexample]
 
 
+def _check_for_unexpected_err(err: msg.CmdError):
+    if err.errorType == msg.UNEXPECTED:
+        err_msg = json.loads(err.data)["msg"]
+        raise UnexpectedErrorException(
+            f"Unexpected error receieved from RPC call: {err_msg}"
+        )
+
+
 Err = TypeVar("Err")
 
 # Results returned by `ChaiCmdExecutor` methods, parameterized on `Err`,
@@ -99,7 +107,6 @@ CmdExecutorCheckError = CheckingError | CmdExecutorTypecheckError
 
 
 def _parse_err(data: dict) -> CmdExecutorParseError:
-    data = data["data"]
     pass_name = data["pass_name"]
     if pass_name == "SanyParser":
         return ParsingError(pass_name, data["error_data"])
@@ -188,8 +195,8 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
     @client._requires_connection
     async def check(
         self,
-        spec: client.Source.Input,
-        aux: Optional[List[client.Source.Input]] = None,
+        spec: Input,
+        aux: Optional[List[Input]] = None,
         config: Optional[dict] = None,
     ) -> CmdExecutorResult[CmdExecutorCheckError]:
         """Model check a TLA spec
@@ -200,28 +207,59 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             config: Application configuration, as documented in `Apalache's
                 Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
         """
-        resp: msg.CmdResponse = await self._stub.run(
-            msg.CmdRequest(cmd=msg.Cmd.CHECK, config=_config_json(spec, aux, config))
-        )  # type: ignore
-        if resp.HasField("failure"):
-            err: msg.CmdError = resp.failure
-            err_data = json.loads(err.data)
-            if err.errorType == msg.UNEXPECTED:
-                raise UnexpectedErrorException(
-                    f"Unexpected error receieved from RPC call: {err_data['msg']}"
-                )
-            return _checking_err(err_data)
-        else:
-            return json.loads(resp.success)
+        return await self._run_rpc_cmd(msg.Cmd.CHECK, spec, aux, config, _checking_err)
 
     @client._requires_connection
     async def parse(
-        self, module: str, aux: List[str], config: dict
+        self,
+        spec: Input,
+        aux: Optional[List[Input]] = None,
+        config: Optional[dict] = None,
     ) -> CmdExecutorResult[CmdExecutorParseError]:
-        ...
+        """Parse a TLA spec
+
+        Args:
+            spec: The root module, as a string or path to a file.
+            aux: Auxiliary modules extended by the root module.
+            config: Application configuration, as documented in `Apalache's
+                Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
+        """
+        return await self._run_rpc_cmd(msg.Cmd.PARSE, spec, aux, config, _parse_err)
 
     @client._requires_connection
     async def typecheck(
-        self, module: str, aux: List[str], config: dict
+        self,
+        spec: Input,
+        aux: Optional[List[Input]] = None,
+        config: Optional[dict] = None,
     ) -> CmdExecutorResult[CmdExecutorTypecheckError]:
-        ...
+        """Typecheck a TLA spec
+
+        Args:
+            spec: The root module, as a string or path to a file.
+            aux: Auxiliary modules extended by the root module.
+            config: Application configuration, as documented in `Apalache's
+                Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
+        """
+        return await self._run_rpc_cmd(
+            msg.Cmd.TYPECHECK, spec, aux, config, _typechecking_err
+        )
+
+    async def _run_rpc_cmd(
+        self,
+        cmd: msg._Cmd.ValueType,
+        spec: Input,
+        aux: Optional[List[Input]],
+        config: Optional[dict],
+        err_parser: Callable[[dict], CmdExecutorResult[Err]],
+    ) -> CmdExecutorResult[Err]:
+        resp: msg.CmdResponse = await self._stub.run(
+            msg.CmdRequest(cmd=cmd, config=_config_json(spec, aux, config))
+        )  # type: ignore
+        if resp.HasField("failure"):
+            err: msg.CmdError = resp.failure
+            _check_for_unexpected_err(err)
+            err_data = json.loads(err.data)
+            return err_parser(err_data)
+        else:
+            return json.loads(resp.success)
