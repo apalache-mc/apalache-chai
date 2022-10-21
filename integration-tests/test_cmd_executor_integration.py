@@ -8,6 +8,7 @@ import pytest
 
 from chai import ChaiCmdExecutor, CheckingError, TypecheckingError
 from chai.client import Source
+from chai.cmd_executor import ParsingError
 
 
 # Fixture to start and clean up Apalache's Shai server
@@ -113,8 +114,8 @@ Inv == x
     res = await client.check(spec, config={"checker": {"inv": ["Inv"]}})
     assert isinstance(res, CheckingError)
     assert res.checking_result == "Error"
-    states = res.counter_example[0]["states"][1]
-    assert states == {"#meta": {"index": 1}, "x": False, "y": True}
+    state1 = res.counter_example[0]["states"][1]
+    assert state1 == {"#meta": {"index": 1}, "x": False, "y": True}
 
 
 async def test_checking_model_with_type_errors_returns_type_error(
@@ -139,15 +140,97 @@ Next == TRUE
     assert len(res.errors) == 2
 
 
-# TODO: Requires a fix in Apalache's pass error reporting
-# async def test_checking_model_with_invalid_syntax_returns_parsing_error(
-#     client: ChaiCmdExecutor,
-# ) -> None:
-#     spec = r"""
-# ---- MODULE M ----
-# Foo = x
-# ====
-# """
-#     res = await client.check(spec)
-#     print(res)
-#     assert isinstance(res, ParsingError)
+async def test_checking_model_with_invalid_syntax_returns_parsing_error(
+    client: ChaiCmdExecutor,
+) -> None:
+    spec = r"""
+---- MODULE M ----
+Foo = x
+====
+"""
+    res = await client.check(spec)
+    assert isinstance(res, ParsingError)
+
+
+async def test_typechecking_a_well_typed_model_succeeds(
+    client: ChaiCmdExecutor,
+) -> None:
+    spec = r"""
+---- MODULE M ----
+EXTENDS Integers
+VARIABLES
+    \* @type: Int;
+    x
+
+Add1 == x + 1
+====
+"""
+    res = await client.typecheck(spec)
+    # We get a dictionary back
+    assert isinstance(res, dict)
+    # And the dictionary is an Apalache IR representation of the module
+    assert res["name"] == "ApalacheIR"
+
+
+async def test_typechecking_an_ill_typed_model_fails(
+    client: ChaiCmdExecutor,
+) -> None:
+    spec = r"""
+---- MODULE M ----
+EXTENDS Integers
+VARIABLES
+    \* @type: Seq(Int);
+    x
+
+Add1 == x + 1
+====
+"""
+    res = await client.typecheck(spec)
+    assert isinstance(res, TypecheckingError)
+    assert res.msg == "Encountered a typechecking error"
+    assert res.errors == [
+        [
+            "M.tla:8:9-8:13",
+            "An operator with the signature ((Int, Int) => Int) cannot be applied to the provided arguments of type Seq(Int) and Int",  # noqa: E501
+        ],
+        ["M.tla:8:1-8:13", "Error when computing the type of Add1"],
+    ]
+
+
+async def test_typechecking_a_syntacticall_invalid_model_is_a_parse_error(
+    client: ChaiCmdExecutor,
+) -> None:
+    spec = r"""
+---- MODULE M ----
+Foo = "OOPS"
+====
+"""
+    res = await client.typecheck(spec)
+    assert isinstance(res, ParsingError)
+
+
+async def test_parsing_a_valid_model_succeeds(
+    client: ChaiCmdExecutor,
+) -> None:
+    spec = r"""
+---- MODULE M ----
+Foo == TRUE
+====
+"""
+    res = await client.parse(spec)
+    # We get a dictionary back
+    assert isinstance(res, dict)
+    # And the dictionary is an Apalache IR representation of the module
+    assert res["name"] == "ApalacheIR"
+
+
+async def test_parsing_an_invalid_model_fails(
+    client: ChaiCmdExecutor,
+) -> None:
+    spec = r"""
+---- MODULE M ----
+Foo = "OOPS"
+====
+"""
+    res = await client.parse(spec)
+    assert isinstance(res, ParsingError)
