@@ -32,26 +32,6 @@ from typing_extensions import Self
 T = TypeVar("T")
 
 
-class Source(str):
-    """
-    A source from which the client can load data,
-    """
-
-    # Supported inputs to derive a `Source`
-    Input = Union[str, Path]
-
-    def __new__(cls, source: Input):
-        if isinstance(source, str):
-            return super().__new__(cls, source)
-        elif isinstance(source, Path):
-            return super().__new__(cls, source.read_text())
-        else:
-            raise ValueError(
-                "Source can only be construced from a str or a Path,"
-                f"given {type(source)}"
-            )
-
-
 @dataclass
 class RpcErr(ABC):
     """The abstract base class of application errors returned from an RPC call
