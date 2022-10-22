@@ -23,6 +23,7 @@ import grpc.aio as aio  # type: ignore
 import chai.client as client
 import chai.transExplorer_pb2 as msg
 import chai.transExplorer_pb2_grpc as service
+from chai.source import Source
 
 T = TypeVar("T")
 
@@ -112,8 +113,8 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
     @client._requires_connection
     async def load_model(
         self,
-        spec: client.Source.Input,
-        aux: Optional[Iterable[client.Source.Input]] = None,
+        spec: Source.Input,
+        aux: Optional[Iterable[Source.Input]] = None,
     ) -> client.RpcResult[dict]:
         """Load a model into the connected session
 
@@ -133,8 +134,8 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
         resp: msg.LoadModelResponse = await self._stub.loadModel(
             msg.LoadModelRequest(
                 conn=self._conn,
-                spec=client.Source(spec),
-                aux=(client.Source(s) for s in aux_sources),
+                spec=Source.load_input(spec),
+                aux=(Source.load_input(s) for s in aux_sources),
             )
         )  # type: ignore
 
