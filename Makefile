@@ -57,7 +57,6 @@ apalache:
 
 lint:
 	poetry run flake8 .
-	poetry run isort .
 	poetry run black . --check
 
 test:

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
-from subprocess import Popen
 from pathlib import Path
+from subprocess import Popen
 
 import pytest
 
 from chai import ChaiCmdExecutor, CheckingError, TypecheckingError
-from chai.source import Source
 from chai.cmd_executor import ParsingError
+from chai.source import Source
 
 
 # Fixture to start and clean up Apalache's Shai server

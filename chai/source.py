@@ -1,25 +1,25 @@
-from typing import List, Optional, Union
-from pathlib import Path
-from typing_extensions import Self
 import re
-import os
+from pathlib import Path
+from typing import List, Optional, Union
 
+from typing_extensions import Self
 
 INSTANCE_LINE_PREFIX_RE = re.compile(r".*INSTANCE *")
 EXTENDS_LINE_PREFIX_RE = re.compile(r" *EXTENDS *")
 
 
-def _get_comma_separated_deps(l: str) -> List[str]:
+def _get_comma_separated_deps(line: str) -> List[str]:
     """Find the dependencies from a line in a module"""
-    rest = re.sub(EXTENDS_LINE_PREFIX_RE, "", re.sub(INSTANCE_LINE_PREFIX_RE, "", l))
+    # Drop the prefix parts of the lines
+    rest = re.sub(EXTENDS_LINE_PREFIX_RE, "", re.sub(INSTANCE_LINE_PREFIX_RE, "", line))
     return [
         non_empty for non_empty in (dep.strip() for dep in rest.split(",")) if non_empty
     ]
 
 
-def _get_dep_from_instance_line(l: str) -> List[str]:
+def _get_dep_from_instance_line(line: str) -> List[str]:
     """Find the dependencies from an INSTANCE declaration"""
-    rest = re.sub(INSTANCE_LINE_PREFIX_RE, "", l)
+    rest = re.sub(INSTANCE_LINE_PREFIX_RE, "", line)
     # The dependency will be the first word in the line...
     dep = next(
         (d for d in rest.split(" ") if d),
@@ -44,24 +44,25 @@ def _get_module_deps(module: str) -> List[str]:
     deps = []
     # Comma separated deps may extend over many lines
     in_comma_sep_deps = False
-    for l in module.splitlines():
-        if not in_comma_sep_deps and re.search(EXTENDS_LINE_PREFIX_RE, l):
+    for line in module.splitlines():
+        if not in_comma_sep_deps and re.search(EXTENDS_LINE_PREFIX_RE, line):
             in_comma_sep_deps = True
 
-        if not in_comma_sep_deps and re.search(INSTANCE_LINE_PREFIX_RE, l):
-            if "," in l:
+        if not in_comma_sep_deps and re.search(INSTANCE_LINE_PREFIX_RE, line):
+            if "," in line:
                 in_comma_sep_deps = True
             else:
-                new_deps = _get_dep_from_instance_line(l)
+                new_deps = _get_dep_from_instance_line(line)
                 deps.extend(new_deps)
 
         if in_comma_sep_deps:
-            new_deps = _get_comma_separated_deps(l)
-            # Check if we have a blank line, in which case we don't add anything and keep searching
+            new_deps = _get_comma_separated_deps(line)
+            # Check if we have a blank line,
+            # in which case we don't add anything and keep searching
             if new_deps:
                 deps.extend(new_deps)
                 # If the line ends in a comma, we will have more deps to come
-                if not l.rstrip().endswith(","):
+                if not line.rstrip().endswith(","):
                     in_comma_sep_deps = False
 
     return deps

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Callable, List, Optional, Tuple, TypeVar, Union
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See

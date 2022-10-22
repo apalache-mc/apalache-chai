@@ -16,7 +16,6 @@ from abc import ABC, abstractclassmethod, abstractmethod
 from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, Union
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
