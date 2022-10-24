@@ -91,7 +91,10 @@ def _load_deps_of_tla_file(tla_module: Path) -> List[str]:
 
 class Source:
     """
-    A source from which the client can load data
+    In-memory representation of a TLA+ module and it's dependencies as strings.
+
+    To initialize from filesystem objects, use the class methods `of_file`
+    or `of_file_load_deps`.
     """
 
     @classmethod
