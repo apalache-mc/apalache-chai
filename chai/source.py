@@ -126,7 +126,7 @@ class Source:
         return Source(
             source=p.read_text(),
             aux=[s.read_text() for s in aux],
-            format=p.suffix.lstrip("."),
+            format=p.suffix.lstrip("."),  # last filename suffix, without leading "."
         )
 
     @classmethod
