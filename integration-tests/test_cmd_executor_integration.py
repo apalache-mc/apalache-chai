@@ -238,15 +238,15 @@ Foo = "OOPS"
 
 async def test_can_load_deps_from_file_system(client: ChaiCmdExecutor) -> None:
     this_file_dir = Path(__file__).parent.resolve()
-    # Loda a source that requires other deps located on disk
+    # Load a source that requires other deps located on disk
     source = Source.of_file_load_deps(Path(this_file_dir / "M.tla"))
     res = await client.parse(source)
     # We got back a dictionary representing the parsed modules
     assert isinstance(res, dict)
-    # Find the operator that came from the on-disk dependency (see CustomDep.tla)
+    # Find the operator that came from the on-disk dependency (see TransitiveDep.tla)
     op = next(
         decl
         for decl in res["modules"][0]["declarations"]
-        if decl["name"] == "OperatorInCustomDep"
+        if decl["name"] == "OperatorInTransitiveDep"
     )
     assert op["body"]["value"]["value"] is True

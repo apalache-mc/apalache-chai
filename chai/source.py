@@ -7,6 +7,9 @@ from typing_extensions import Self
 INSTANCE_LINE_PREFIX_RE = re.compile(r".*INSTANCE *")
 EXTENDS_LINE_PREFIX_RE = re.compile(r" *EXTENDS *")
 
+# Suffix for TLA files
+TLA_SUFFIX = "tla"
+
 
 def _get_comma_separated_deps(line: str) -> List[str]:
     """Find the dependencies from a line in a module"""
@@ -68,6 +71,24 @@ def _get_module_deps(module: str) -> List[str]:
     return deps
 
 
+def _load_deps_of_tla_file(tla_module: Path) -> List[str]:
+    """Load all the found dependencies on disk for TLA+ module
+
+    Return:
+        a list of the contents of the dependenceis
+    """
+    print(">>>", tla_module)
+    content = tla_module.read_text()
+    deps = _get_module_deps(content)
+    print(deps)
+    return [
+        dep
+        for f in tla_module.parent.resolve().iterdir()
+        if f.stem in deps and f.suffix.lstrip(".") == TLA_SUFFIX
+        for dep in (_load_deps_of_tla_file(f) + [f.read_text()])
+    ]
+
+
 class Source:
     """
     A source from which the client can load data
@@ -115,20 +136,14 @@ class Source:
         Args:
             p: The main file
         """
-        if not (p.suffix == ".tla"):
+        if not (p.suffix.lstrip(".") == TLA_SUFFIX):
             raise ValueError(
                 f"dependencies can only be loaded for TLA files, given: {p}"
             )
         # The directory in which the file is located
         source = p.read_text()
-        format = p.suffix.lstrip(".")
-        deps = _get_module_deps(source)
-        aux = [
-            f.read_text()
-            for f in p.parent.resolve().iterdir()
-            if f.stem in deps and f.suffix == ".tla"
-        ]
-        return Source(source=source, aux=aux, format=format)
+        aux = _load_deps_of_tla_file(p)
+        return Source(source=source, aux=aux, format=TLA_SUFFIX)
 
     def __init__(
         self,
