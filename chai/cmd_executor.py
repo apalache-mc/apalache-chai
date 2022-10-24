@@ -13,8 +13,8 @@ import grpc.aio as aio  # type: ignore
 import chai.client as client
 import chai.cmdExecutor_pb2 as msg
 import chai.cmdExecutor_pb2_grpc as service
+from chai.source import Source
 
-Input = client.Source.Input
 # Derived from JSON encodings
 Counterexample = dict
 TlaModule = dict
@@ -140,13 +140,10 @@ def _checking_err(data: dict) -> CmdExecutorCheckError:
         return _typechecking_err(data)
 
 
-def _config_json(spec: Input, aux: Optional[List[Input]], cfg: Optional[dict]) -> str:
+def _config_json(source: Source, cfg: Optional[dict]) -> str:
     # TODO: error if source already set in config?
-    aux = aux or []
     config = cfg or {}
-    return json.dumps(
-        config | {"input": {"source": {"type": "string", "content": spec, "aux": aux}}}
-    )
+    return json.dumps(config | source.to_dict())
 
 
 class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
@@ -195,8 +192,7 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
     @client._requires_connection
     async def check(
         self,
-        spec: Input,
-        aux: Optional[List[Input]] = None,
+        input: Source,
         config: Optional[dict] = None,
     ) -> CmdExecutorResult[CmdExecutorCheckError]:
         """Model check a TLA spec
@@ -207,13 +203,17 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             config: Application configuration, as documented in `Apalache's
                 Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
         """
-        return await self._run_rpc_cmd(msg.Cmd.CHECK, spec, aux, config, _checking_err)
+        return await self._run_rpc_cmd(
+            cmd=msg.Cmd.CHECK,
+            input=input,
+            config=config,
+            err_parser=_checking_err,
+        )
 
     @client._requires_connection
     async def parse(
         self,
-        spec: Input,
-        aux: Optional[List[Input]] = None,
+        input: Source,
         config: Optional[dict] = None,
     ) -> CmdExecutorResult[CmdExecutorParseError]:
         """Parse a TLA spec
@@ -224,13 +224,17 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             config: Application configuration, as documented in `Apalache's
                 Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
         """
-        return await self._run_rpc_cmd(msg.Cmd.PARSE, spec, aux, config, _parse_err)
+        return await self._run_rpc_cmd(
+            cmd=msg.Cmd.PARSE,
+            input=input,
+            config=config,
+            err_parser=_parse_err,
+        )
 
     @client._requires_connection
     async def typecheck(
         self,
-        spec: Input,
-        aux: Optional[List[Input]] = None,
+        input: Source,
         config: Optional[dict] = None,
     ) -> CmdExecutorResult[CmdExecutorTypecheckError]:
         """Typecheck a TLA spec
@@ -242,19 +246,24 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
                 Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
         """
         return await self._run_rpc_cmd(
-            msg.Cmd.TYPECHECK, spec, aux, config, _typechecking_err
+            cmd=msg.Cmd.TYPECHECK,
+            input=input,
+            config=config,
+            err_parser=_typechecking_err,
         )
 
     async def _run_rpc_cmd(
         self,
+        *,
         cmd: msg._Cmd.ValueType,
-        spec: Input,
-        aux: Optional[List[Input]],
+        input: Source,
         config: Optional[dict],
         err_parser: Callable[[dict], CmdExecutorResult[Err]],
     ) -> CmdExecutorResult[Err]:
+        rpc_args: dict = config or {}
+        rpc_config = json.dumps(rpc_args | input.to_dict())
         resp: msg.CmdResponse = await self._stub.run(
-            msg.CmdRequest(cmd=cmd, config=_config_json(spec, aux, config))
+            msg.CmdRequest(cmd=cmd, config=rpc_config)
         )  # type: ignore
         if resp.HasField("failure"):
             err: msg.CmdError = resp.failure

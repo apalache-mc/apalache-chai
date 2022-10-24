@@ -14,7 +14,8 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Optional, TypeVar
+from pathlib import Path
+from typing import Optional, TypeVar, Union
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
@@ -25,6 +26,24 @@ import chai.transExplorer_pb2 as msg
 import chai.transExplorer_pb2_grpc as service
 
 T = TypeVar("T")
+
+
+# TODO: remove in favor of `chai.source.Source`
+def _load_input(source: Union[str, Path]) -> str:
+    """Convert an Input into a string:
+
+    - loading the contents of a file specified by a `Path`
+    - acting as identity on a string
+    """
+    if isinstance(source, str):
+        return source
+    elif isinstance(source, Path):
+        return source.read_text()
+    else:
+        raise ValueError(
+            "Source can only be construced from a str or a Path,"
+            f"given {type(source)}"
+        )
 
 
 @dataclass
@@ -112,8 +131,8 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
     @client._requires_connection
     async def load_model(
         self,
-        spec: client.Source.Input,
-        aux: Optional[Iterable[client.Source.Input]] = None,
+        spec: Union[str, Path],
+        aux: Optional[Iterable[Union[str, Path]]] = None,
     ) -> client.RpcResult[dict]:
         """Load a model into the connected session
 
@@ -133,8 +152,8 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
         resp: msg.LoadModelResponse = await self._stub.loadModel(
             msg.LoadModelRequest(
                 conn=self._conn,
-                spec=client.Source(spec),
-                aux=(client.Source(s) for s in aux_sources),
+                spec=_load_input(spec),
+                aux=(_load_input(s) for s in aux_sources),
             )
         )  # type: ignore
 

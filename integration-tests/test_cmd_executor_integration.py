@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Iterator
+from pathlib import Path
 from subprocess import Popen
-from typing import List
 
 import pytest
 
 from chai import ChaiCmdExecutor, CheckingError, TypecheckingError
-from chai.client import Source
 from chai.cmd_executor import ParsingError
+from chai.source import Source
 
 
 # Fixture to start and clean up Apalache's Shai server
@@ -54,7 +54,7 @@ Init == TRUE
 Next == TRUE
 ====
 """
-    res = await client.check(spec)
+    res = await client.check(Source(spec))
     assert isinstance(res, dict)
     m = res["modules"][0]
     assert m["name"] == "M" and m["kind"] == "TlaModule"
@@ -67,14 +67,14 @@ EXTENDS A
 Next == TRUE
 ====
 """
-    aux: List[Source.Input] = [
+    aux = [
         """
 ---- MODULE A ----
 Init == TRUE
 ====
 """
     ]
-    res = await client.check(spec, aux)
+    res = await client.check(Source(spec, aux=aux))
     assert isinstance(res, dict)
     m = res["modules"][0]
     decls = m["declarations"]
@@ -90,7 +90,7 @@ Init == TRUE
 Next == FALSE
 ====
 """
-    res = await client.check(spec)
+    res = await client.check(Source(spec))
     assert isinstance(res, CheckingError)
     assert res.checking_result == "Deadlock"
 
@@ -111,7 +111,7 @@ Next == x' = FALSE /\ y' = y
 Inv == x
 ====
 """
-    res = await client.check(spec, config={"checker": {"inv": ["Inv"]}})
+    res = await client.check(Source(spec), config={"checker": {"inv": ["Inv"]}})
     assert isinstance(res, CheckingError)
     assert res.checking_result == "Error"
     state1 = res.counter_example[0]["states"][1]
@@ -131,7 +131,7 @@ Init == x = "foo"
 Next == TRUE
 ====
 """
-    res = await client.check(spec)
+    res = await client.check(Source(spec))
     print(res)
     assert isinstance(res, TypecheckingError)
     # Errors look something like:
@@ -148,7 +148,7 @@ async def test_checking_model_with_invalid_syntax_returns_parsing_error(
 Foo = x
 ====
 """
-    res = await client.check(spec)
+    res = await client.check(Source(spec))
     assert isinstance(res, ParsingError)
 
 
@@ -165,7 +165,7 @@ VARIABLES
 Add1 == x + 1
 ====
 """
-    res = await client.typecheck(spec)
+    res = await client.typecheck(Source(spec))
     # We get a dictionary back
     assert isinstance(res, dict)
     # And the dictionary is an Apalache IR representation of the module
@@ -185,7 +185,7 @@ VARIABLES
 Add1 == x + 1
 ====
 """
-    res = await client.typecheck(spec)
+    res = await client.typecheck(Source(spec))
     assert isinstance(res, TypecheckingError)
     assert res.msg == "Encountered a typechecking error"
     assert res.errors == [
@@ -205,7 +205,7 @@ async def test_typechecking_a_syntacticall_invalid_model_is_a_parse_error(
 Foo = "OOPS"
 ====
 """
-    res = await client.typecheck(spec)
+    res = await client.typecheck(Source(spec))
     assert isinstance(res, ParsingError)
 
 
@@ -217,7 +217,7 @@ async def test_parsing_a_valid_model_succeeds(
 Foo == TRUE
 ====
 """
-    res = await client.parse(spec)
+    res = await client.parse(Source(spec))
     # We get a dictionary back
     assert isinstance(res, dict)
     # And the dictionary is an Apalache IR representation of the module
@@ -232,5 +232,21 @@ async def test_parsing_an_invalid_model_fails(
 Foo = "OOPS"
 ====
 """
-    res = await client.parse(spec)
+    res = await client.parse(Source(spec))
     assert isinstance(res, ParsingError)
+
+
+async def test_can_load_deps_from_file_system(client: ChaiCmdExecutor) -> None:
+    this_file_dir = Path(__file__).parent.resolve()
+    # Load a source that requires other deps located on disk
+    source = Source.of_file_load_deps(Path(this_file_dir / "M.tla"))
+    res = await client.parse(source)
+    # We got back a dictionary representing the parsed modules
+    assert isinstance(res, dict)
+    # Find the operator that came from the on-disk dependency (see TransitiveDep.tla)
+    op = next(
+        decl
+        for decl in res["modules"][0]["declarations"]
+        if decl["name"] == "OperatorInTransitiveDep"
+    )
+    assert op["body"]["value"]["value"] is True

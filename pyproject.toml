@@ -38,6 +38,7 @@ build-backend = "poetry.core.masonry.api"
 exclude = ["apalache", "**/*_pb2*"]
 
 [tool.isort]
+profile = "black" # Prevent conflicts with black formatting
 skip_glob = ["apalache", "**/*_pb2*"]
 
 [tool.black]

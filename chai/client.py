@@ -16,7 +16,6 @@ from abc import ABC, abstractclassmethod, abstractmethod
 from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, Union
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
@@ -30,26 +29,6 @@ from typing_extensions import Self
 #############
 
 T = TypeVar("T")
-
-
-class Source(str):
-    """
-    A source from which the client can load data,
-    """
-
-    # Supported inputs to derive a `Source`
-    Input = Union[str, Path]
-
-    def __new__(cls, source: Input):
-        if isinstance(source, str):
-            return super().__new__(cls, source)
-        elif isinstance(source, Path):
-            return super().__new__(cls, source.read_text())
-        else:
-            raise ValueError(
-                "Source can only be construced from a str or a Path,"
-                f"given {type(source)}"
-            )
 
 
 @dataclass
