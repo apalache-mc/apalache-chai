@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from typing_extensions import Self
 
@@ -93,27 +93,6 @@ class Source:
     """
     A source from which the client can load data
     """
-
-    # Supported inputs to derive a `Source`
-    # Strings should be a
-    Input = Union[str, Path]
-
-    @classmethod
-    def load_input(cls, source: Input) -> str:
-        """Convert an Input into a string:
-
-        - loading the contents of a file specified by a `Path`
-        - acting as identity on a string
-        """
-        if isinstance(source, str):
-            return source
-        elif isinstance(source, Path):
-            return source.read_text()
-        else:
-            raise ValueError(
-                "Source can only be construced from a str or a Path,"
-                f"given {type(source)}"
-            )
 
     @classmethod
     def of_file(cls, p: Path, aux: List[Path]) -> Self:

@@ -15,7 +15,6 @@ import chai.cmdExecutor_pb2 as msg
 import chai.cmdExecutor_pb2_grpc as service
 from chai.source import Source
 
-Input = Source.Input
 # Derived from JSON encodings
 Counterexample = dict
 TlaModule = dict
