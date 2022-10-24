@@ -14,8 +14,8 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Optional, TypeVar, Union
 from pathlib import Path
+from typing import Optional, TypeVar, Union
 
 # TODO remove `type: ignore` when stubs are available for grpc.aio See
 # https://github.com/shabbyrobe/grpc-stubs/issues/22
