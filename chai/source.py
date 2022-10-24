@@ -148,7 +148,7 @@ class Source:
     def __init__(
         self,
         source: str,
-        *,
+        *,  # force all other arguments to be keyword-only
         aux: Optional[List[str]] = None,
         format: str = "tla",
     ) -> None:
