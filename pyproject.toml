@@ -6,7 +6,7 @@ authors = ["Shon Feder <shon@informal.systems>"]
 license = "Apache2.0"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8"
 grpcio-tools = "^1.47.0"
 poetry = {version = "^1.2.0b3", allow-prereleases = true}
 grpcio = "^1.47.0"
