@@ -100,10 +100,10 @@ CmdExecutorResult = Union[Err, TlaModule]
 CmdExecutorParseError = ParsingError
 
 # The application errors that can be returned by the `typecheck` method
-CmdExecutorTypecheckError = TypecheckingError | CmdExecutorParseError
+CmdExecutorTypecheckError = Union[TypecheckingError, CmdExecutorParseError]
 
 # The application errors that can be returned by the `check` method
-CmdExecutorCheckError = CheckingError | CmdExecutorTypecheckError
+CmdExecutorCheckError = Union[CheckingError, CmdExecutorTypecheckError]
 
 
 def _parse_err(data: dict) -> CmdExecutorParseError:
@@ -138,12 +138,6 @@ def _checking_err(data: dict) -> CmdExecutorCheckError:
         return CheckingError(pass_name, checking_result, counter_examples)
     else:
         return _typechecking_err(data)
-
-
-def _config_json(source: Source, cfg: Optional[dict]) -> str:
-    # TODO: error if source already set in config?
-    config = cfg or {}
-    return json.dumps(config | source.to_dict())
 
 
 class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
@@ -261,7 +255,10 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
         err_parser: Callable[[dict], CmdExecutorResult[Err]],
     ) -> CmdExecutorResult[Err]:
         rpc_args: dict = config or {}
-        rpc_config = json.dumps(rpc_args | input.to_dict())
+        # Merge the `input` (as a adict) into the `rpc_args`, with the `input` taking precedence
+        # See https://datagy.io/python-merge-dictionaries/#Merge_Python_Dictionaries_with_Item_Unpacking
+        merged_args = {**rpc_args, **input.to_dict()}
+        rpc_config = json.dumps(merged_args)
         resp: msg.CmdResponse = await self._stub.run(
             msg.CmdRequest(cmd=cmd, config=rpc_config)
         )  # type: ignore
