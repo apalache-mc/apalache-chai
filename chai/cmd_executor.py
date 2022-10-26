@@ -255,8 +255,9 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
         err_parser: Callable[[dict], CmdExecutorResult[Err]],
     ) -> CmdExecutorResult[Err]:
         rpc_args: dict = config or {}
-        # Merge the `input` (as a adict) into the `rpc_args`, with the `input` taking precedence
-        # See https://datagy.io/python-merge-dictionaries/#Merge_Python_Dictionaries_with_Item_Unpacking
+        # Merge the `input` (as a adict) into the `rpc_args`,
+        # with the `input` taking precedence
+        # See https://datagy.io/python-merge-dictionaries/#Merge_Python_Dictionaries_with_Item_Unpacking # noqa: E501
         merged_args = {**rpc_args, **input.to_dict()}
         rpc_config = json.dumps(merged_args)
         resp: msg.CmdResponse = await self._stub.run(
