@@ -77,10 +77,8 @@ def _load_deps_of_tla_file(tla_module: Path) -> List[str]:
     Return:
         a list of the contents of the dependenceis
     """
-    print(">>>", tla_module)
     content = tla_module.read_text()
     deps = _get_module_deps(content)
-    print(deps)
     return [
         dep
         for f in tla_module.parent.resolve().iterdir()

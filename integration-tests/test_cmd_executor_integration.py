@@ -132,7 +132,6 @@ Next == TRUE
 ====
 """
     res = await client.check(Source(spec))
-    print(res)
     assert isinstance(res, TypecheckingError)
     # Errors look something like:
     # [['M.tla:7:9-7:17', 'Arguments to = should have the same type. For arguments x, "foo" with types Bool, Str, in expression x = "foo"'], # noqa
