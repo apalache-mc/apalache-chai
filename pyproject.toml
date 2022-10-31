@@ -26,6 +26,10 @@ mypy-protobuf = "^3.2.0"
 # Documentation generation and viewing
 pdoc = "^12.2.0"
 
+# Used for graph generation in ./example/app.py
+networkx = {extras = ["all"], version = "^2.8.7"}
+matplotlib = "^3.6.1"
+
 # These are dependencies used by some developers,
 # not actually required for testing etc.
 python-lsp-server = "^1.5.0"
