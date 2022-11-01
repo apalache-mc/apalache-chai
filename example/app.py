@@ -110,7 +110,7 @@ def hash_state(s: dict):
 
 
 def build_state_graph(counter_examples):
-    """Build a graph of all he states in the `counter_examples`"""
+    """Build a graph of all the states in the `counter_examples`"""
     # For info on graph construction, see
     # https://networkx.org/documentation/latest/reference/classes/digraph.html
     g = nx.DiGraph()
