@@ -61,7 +61,7 @@ NoFile == <<>>
 \* A $cmd is a triple holding:
 \*
 \* - the command name
-\* - the path(s) it operators on
+\* - the path(s) it operates on
 \* - the command's output (if any)
 \*
 \* @typeAlias: cmd = << Str, Seq($file), Set($file) >> ;
