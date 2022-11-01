@@ -211,7 +211,7 @@ async def main(args: argparse.Namespace):
         set_model_params(args, model)
         print("Model parameters updated from CLI params")
 
-        # Run the typechecker to obtain counterexamples
+        # Run the model checker to obtain counterexamples
         check_resp = await client.check(
             input=src_of_model(model),
             config={
