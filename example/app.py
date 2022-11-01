@@ -223,7 +223,7 @@ async def main(args: argparse.Namespace):
                 },
             },
         )
-        # NOTE: Production imlementations should include proper error handling
+        # NOTE: Production implementations should include proper error handling
         assert isinstance(check_resp, CheckingError)
         print("Counter examples have been obtained")
 
