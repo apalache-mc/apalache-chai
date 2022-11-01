@@ -203,7 +203,7 @@ async def main(args: argparse.Namespace):
 
         # Load the TLA into a JSON representation of the model
         model = await client.typecheck(source)
-        # NOTE: Production imlementations should include proper error handling
+        # NOTE: Production implementations should include proper error handling
         assert isinstance(model, TlaModule)
         print("Model parsed, typechecked, and loaded")
 
