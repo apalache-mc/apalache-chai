@@ -261,7 +261,6 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             err_parser=_checking_err,
         )
 
-
     async def _run_rpc_cmd(
         self,
         *,
