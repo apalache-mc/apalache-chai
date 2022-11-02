@@ -59,6 +59,16 @@ pushd apalache && git pull && popod
 make update-grpc
 ```
 
+### Documentation
+
+We use [`pdoc`](https://pdoc.dev/docs/pdoc.html) for generating our API docs.
+
+You can run the doc server on the code base with
+
+``` sh
+poetry run pdoc ./chai
+```
+
 ### Testing
 
 #### Unit tests
