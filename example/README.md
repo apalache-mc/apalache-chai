@@ -6,7 +6,7 @@ used to interact with the Apalache server.
 The demo is defined in [./app.py](./app.py). It performs the following actions:
 
 - Connects to a running Apalache server
-- Makes an RPC call to the server to parse a TLA file into a JSON representation
+- Makes an RPC call to the server to parse a TLA+ file into a JSON representation
   of the model
 - Updates the model to add some values taken from CLI args
 - Makes an RPC call to the server to obtain counter-examples from the
