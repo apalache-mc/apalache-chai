@@ -17,6 +17,7 @@ from chai.source import Source
 
 # Derived from JSON encodings
 Counterexample = dict
+# A dictionary derived from the apalache ITF format
 TlaModule = dict
 
 
@@ -26,60 +27,55 @@ class UnexpectedErrorException(Exception):
 
 @dataclass
 class CmdExecutorError(client.RpcErr):
-    """Base class for known application errors from the CmdExecutor service
-
-    Attributes:
-        pass_name: The name of the processing pass that produced the error.
-    """
+    """Base class for known application errors from the CmdExecutor service"""
 
     pass_name: str
+    """The name of the processing pass that produced the error."""
 
 
 @dataclass
 class ParsingError(CmdExecutorError):
-    """Records a parsing error
-
-    Attributes:
-        errors: A list of parsing error messages.
-    """
+    """Records a parsing error"""
 
     # Set the `msg` field, but don't expose it as settable field in the constructor
     msg: str = field(default="Encountered a parsing error", init=False)
     errors: List[str]
+    """A list of parsing error messages."""
 
 
 @dataclass
 class TypecheckingError(CmdExecutorError):
-    """Records a typechecking error
-
-    Attributes:
-        errors: A list of tuples pairing source locations with type error
-            messages.
-    """
+    """Records a typechecking error"""
 
     # Set the `msg` field, but don't expose it as settable field in the constructor
     msg: str = field(default="Encountered a typechecking error", init=False)
     errors: List[Tuple[str, str]]  # location, msg errors
+    """A list of tuples pairing source locations with type error messages."""
 
 
 @dataclass
 class CheckingError(CmdExecutorError):
-    """Records a model checking error
-
-    Attributes:
-        checking_result: The kind of model checking result. The possible result
-            kinds are as follows
-
-            - Error: A checking violation is found.
-            - Deadlock: A deadlock was found.
-            - RuntimeError: A runtime error was encountered, preventing checking.
-        counter_examples: A list of counterexamples found.
-    """
+    """Records a model checking error"""
 
     # Set the `msg` field, but don't expose it as settable field in the constructor
     msg: str = field(default="Encountered a model checking error", init=False)
+
     checking_result: str
+    """The kind of model checking result. The possible result
+
+    Kinds are as follows
+
+    - Error: A checking violation is found.
+    - Deadlock: A deadlock was found.
+    - RuntimeError: A runtime error was encountered, preventing checking.
+    """
+
     counter_example: List[Counterexample]
+    """A list of counterexamples found
+
+    Each counterexample is a dictionary decoded from the
+    Apalache [ITF format](https://apalache.informal.systems/docs/adr/015adr-trace.html?highlight=ITF#the-itf-format).
+    """  # noqa: E501
 
 
 def _check_for_unexpected_err(err: msg.CmdError):
@@ -92,18 +88,21 @@ def _check_for_unexpected_err(err: msg.CmdError):
 
 Err = TypeVar("Err")
 
-# Results returned by `ChaiCmdExecutor` methods, parameterized on `Err`,
-# the application errors they can return
 CmdExecutorResult = Union[Err, TlaModule]
+"""
+Results returned by `ChaiCmdExecutor` methods, parameterized on `Err`,
+the application errors they can return
+"""
 
-# The application errors that can be returned by the `parse` method
 CmdExecutorParseError = ParsingError
+"""The application errors that can be returned by the `parse` method"""
 
-# The application errors that can be returned by the `typecheck` method
+
 CmdExecutorTypecheckError = Union[TypecheckingError, CmdExecutorParseError]
+"""The application errors that can be returned by the `typecheck` method"""
 
-# The application errors that can be returned by the `check` method
 CmdExecutorCheckError = Union[CheckingError, CmdExecutorTypecheckError]
+"""The application errors that can be returned by the `check` method"""
 
 
 def _parse_err(data: dict) -> CmdExecutorParseError:
@@ -146,10 +145,22 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
     The `CmdExecutor` service is a stateless service exposing the functionality
     of Apalache's CLI.
 
+    This functionality is exposed through 3 methods, each of which takes 2 arguments:
+
+    - a `chai.source.Source` with the input specification
+    - a dictionary [configuring Apalache's
+      parameters](https://apalache.informal.systems/docs/apalache/config.html)
+
+    Each method either returns an error (a subclass of `CmdExecutorError`)
+    describing the kind of failure and providing useful error data (if
+    available), or else a dictionary representing the specification through the
+    [JSON encoding](https://apalache.informal.systems/docs/adr/005adr-json.html)
+    of  Apalache's TlaIR (TLA Intermediate Representation)
+
     Example usage:
 
-    ```
-    from chai import ChaiCmdExecutor
+    ```python
+    from chai import ChaiCmdExecutor, Source, CheckingError
 
     async with ChaiCmdExecutor.create() as client:
         assert client.is_connected()
@@ -166,15 +177,22 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             Inv == x
             ====
             '''
-        res = await client.check(spec, config={"checker": {"inv": ["Inv"]}})
-        assert isinstance(res, CheckingError)
-        assert res.checking_result == "Error"
-        states = res.counter_example[0]["states"][1]
-        assert states == {"#meta": {"index": 1}, "x": False, "y": True}
-
-    See the documetation of :class:`~chai.client.Chai` for instruction on using
-    the client safely without a context manager.
+        source = chai.Source(spec)
+        res = await client.check(source, config={"checker": {"inv": ["Inv"]}})
+        if isinstance(res, CheckingError):
+            assert res.checking_result == "Error"
+            states = res.counter_example[0]["states"][1]
+            assert states == {"#meta": {"index": 1}, "x": False, "y": True}
+        elif isinstance(res, ParsingError):
+            print("Failed during parsing")
+        elif isinstance(res, TypecheckingError):
+            print("Failed during typechecking")
+        else:
+            print("Model checked!")
     ```
+
+    See the documetation of `chai.client.Chai` for instruction on using
+    the client safely without a context manager.
     """
 
     _PING_REQUEST = msg.PingRequest  # type: ignore
@@ -183,29 +201,8 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
     def _service(cls, channel: aio.Channel) -> service.CmdExecutorStub:
         return service.CmdExecutorStub(channel)
 
-    async def check(
     @client.requires_connection
-        self,
-        input: Source,
-        config: Optional[dict] = None,
-    ) -> CmdExecutorResult[CmdExecutorCheckError]:
-        """Model check a TLA spec
-
-        Args:
-            spec: The root module, as a string or path to a file.
-            aux: Auxiliary modules extended by the root module.
-            config: Application configuration, as documented in `Apalache's
-                Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
-        """
-        return await self._run_rpc_cmd(
-            cmd=msg.Cmd.CHECK,
-            input=input,
-            config=config,
-            err_parser=_checking_err,
-        )
-
     async def parse(
-    @client.requires_connection
         self,
         input: Source,
         config: Optional[dict] = None,
@@ -213,10 +210,9 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
         """Parse a TLA spec
 
         Args:
-            spec: The root module, as a string or path to a file.
-            aux: Auxiliary modules extended by the root module.
-            config: Application configuration, as documented in `Apalache's
-                Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
+
+        - `input`: A `chai.source.Source`
+        - `config`: Application configuration
         """
         return await self._run_rpc_cmd(
             cmd=msg.Cmd.PARSE,
@@ -225,8 +221,8 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             err_parser=_parse_err,
         )
 
-    async def typecheck(
     @client.requires_connection
+    async def typecheck(
         self,
         input: Source,
         config: Optional[dict] = None,
@@ -234,10 +230,9 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
         """Typecheck a TLA spec
 
         Args:
-            spec: The root module, as a string or path to a file.
-            aux: Auxiliary modules extended by the root module.
-            config: Application configuration, as documented in `Apalache's
-                Manual <https://apalache.informal.systems/docs/apalache/config.html#configuration-files>`_ # noqa
+
+        - `input`: A `chai.source.Source`
+        - `config`: Application configuration
         """
         return await self._run_rpc_cmd(
             cmd=msg.Cmd.TYPECHECK,
@@ -245,6 +240,27 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             config=config,
             err_parser=_typechecking_err,
         )
+
+    @client.requires_connection
+    async def check(
+        self,
+        input: Source,
+        config: Optional[dict] = None,
+    ) -> CmdExecutorResult[CmdExecutorCheckError]:
+        """Model check a TLA spec
+
+        Args:
+
+        - `input`: A `chai.source.Source`
+        - `config`: Application configuration
+        """
+        return await self._run_rpc_cmd(
+            cmd=msg.Cmd.CHECK,
+            input=input,
+            config=config,
+            err_parser=_checking_err,
+        )
+
 
     async def _run_rpc_cmd(
         self,

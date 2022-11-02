@@ -89,10 +89,21 @@ def _load_deps_of_tla_file(tla_module: Path) -> List[str]:
 
 class Source:
     """
-    In-memory representation of a TLA+ module and it's dependencies as strings.
+    In-memory representation of a TLA+ module and its dependencies.
 
-    To initialize from filesystem objects, use the class methods `of_file`
-    or `of_file_load_deps`.
+    If you already have a TLA spec (and some support modules) loaded
+    into a string, you can create a source like so:
+
+    ```python
+    source = Source(spec_str, aux=[support_module], format="tla")
+    ```
+
+    To initialize a `Source` from files on disk, use the class methods
+    `of_file` or `of_file_load_deps`. E.g.,
+
+    ```python
+    source = Source.of_file_load_deps(Path("MySpec.tla"))
+    ````
     """
 
     @classmethod
@@ -100,8 +111,9 @@ class Source:
         """Create a Source for use in an RPC
 
         Args:
-            p: The main file
-            aux: Any auxiliary files required as dependencies
+
+        - `p`: The main file
+        - `aux`: Any auxiliary files required as dependencies
         """
         return Source(
             source=p.read_text(),
@@ -114,7 +126,8 @@ class Source:
         """Like `of_file` but it attempts to load dependencies from the file system
 
         Args:
-            p: The main file
+
+        - `p`: The main file
         """
         if not (p.suffix.lstrip(".") == TLA_SUFFIX):
             raise ValueError(
@@ -132,11 +145,22 @@ class Source:
         aux: Optional[List[str]] = None,
         format: str = "tla",
     ) -> None:
-        self.format = format
-        self.spec = source
-        self.aux = aux or []
+        """Create a source
+
+        Args:
+
+        - `source`: A string representing a TLA spec
+        - `aux`: Auxiliary modules used as dependencies by the `source`
+        - `format`: The format of the `source` (`"tla"` or `"json"`)
+        """
+        self.format: str = format
+        self.spec: str = source
+        self.aux: List[str] = aux or []
 
     def to_dict(self) -> dict:
+        """A representation of the source in a dictionary that serializes into
+        a format consistent with Apalache config inputs configurations.
+        """
         return {
             "input": {
                 "source": {

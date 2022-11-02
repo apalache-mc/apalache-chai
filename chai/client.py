@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 from abc import ABC, abstractclassmethod, abstractmethod
 from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
@@ -33,18 +34,17 @@ T = TypeVar("T")
 
 @dataclass
 class RpcErr(ABC):
-    """The abstract base class of application errors returned from an RPC call
-
-    Attributes:
-        msg: A message explaining the error.
-    """
+    """The abstract base class of application errors returned from an RPC call"""
 
     msg: str
+    """A message explaining the error category."""
 
 
-# An RpcResult[T] is a value of type `T` if the RPC succeeded, returning a `T`
-# from the server, or else it is an `RpcErr`.
 RpcResult = Union[T, RpcErr]
+"""
+An RpcResult[T] is a value of type `T` if the RPC succeeded, returning a `T`
+from the server, or else it is an `RpcErr`.
+"""
 
 
 class ChaiException(Exception):
@@ -72,12 +72,13 @@ def requires_connection(rpc_call):
     Example usage:
 
     ```
-    @_required_connection
+    @required_connection
     def rpc_foo(self, ...):
         # ...
     ```
     """
 
+    @functools.wraps(rpc_call)
     def checked_rpc_call(client, *args, **kwargs):
         if not client.is_connected():
             raise RpcCallWithoutConnection(f"calling method {rpc_call.__name__}")
@@ -95,20 +96,20 @@ Service = TypeVar("Service")
 class Chai(Generic[Service], Awaitable, ABC):
     """Chai: Client for Human-Apalache Interaction
 
-    This is the base class implementing core functionality required to connect
-    to Shai: Server for Human-Apalache Interaction. Specific functionality
-    provided by the server's services is exposed through service-specific
-    subclasses.
+    This is the (low-level) base class implementing core functionality required
+    to connect to Shai. Specific functionality provided by the server's services
+    is exposed through service-specific subclasses, and **you probably don't
+    want to use this class directly**.
 
     This class implements the contextmanager protocol, and is meant to be used
     in a `with` statement to ensure that resources are cleaned up.
 
     Example usage:
 
-    ```
+    ```python
     from client import Chai
 
-    with Chai.create() as client:
+    async with Chai.create() as client:
         assert client.is_connected()
         # Do stuff
     ```
@@ -120,7 +121,7 @@ class Chai(Generic[Service], Awaitable, ABC):
     obtain a connection before doing your work and to close the client when
     done:
 
-    ```
+    ```python
     client = Chai()
     try:
         client.connect()
@@ -163,12 +164,16 @@ class Chai(Generic[Service], Awaitable, ABC):
     ) -> None:
         """Initialize the Chai client.
 
+        These defaults work with the Apalache server's defaults, and in the usual
+        case you shouldn't need to supply these paramters.
+
         Args:
 
-            domain: domain name or IP where the Apalache server is running
-            port: port to which the Apalache server is connected
-            timeout: how long to wait before giving up when trying to connect to
-                the server (default: 60 seconds)
+        - `domain`: domain name or IP where the Apalache server is running
+          (default: `"localhost"`)
+        - `port`: port to which the Apalache server is connected (default: `8822`)
+        - `timeout`: how long to wait (in seconds) before giving up when trying
+           to connect to the server (default: `60.0`)
         """
 
         domain = domain or self._DEFAULT_DOMAIN
@@ -204,7 +209,7 @@ class Chai(Generic[Service], Awaitable, ABC):
 
         Example usage:
 
-        ```
+        ```python
         async with Chai.create() as client:
             # interact with the server
         ```
@@ -225,7 +230,7 @@ class Chai(Generic[Service], Awaitable, ABC):
         called automatically when the class is used as a context manager.
 
         If you call this method directly, you should be sure to call
-        `self.close()` to ensure the connection and channel is
+        `self.close()` to ensure the connection and channel is closed.
         """
         if channel is None:
             # No channel is provided, so we create an unmanaged channel,
@@ -243,7 +248,7 @@ class Chai(Generic[Service], Awaitable, ABC):
         end_time = loop.time() + self._timeout
         while loop.time() < end_time:
             try:
-                await self._stub.ping(self.PING_REQUEST)  # type: ignore
+                await self._stub.ping(self._PING_REQUEST)  # type: ignore
                 return self
             except aio.AioRpcError:
                 # We weren't able to establish a connection this try
