@@ -5,7 +5,7 @@ from subprocess import Popen
 
 import pytest
 
-from chai.blocking import ChaiCmdExecutor
+from chai.blocking import ChaiCmdExecutorBlocking
 from chai.source import Source
 
 
@@ -14,14 +14,14 @@ from chai.source import Source
 # NOTE: In contrast to the `server` fixture, we do want to create this once for
 # each test
 @pytest.fixture
-def client(server: Popen) -> Iterator[ChaiCmdExecutor]:
+def client(server: Popen) -> Iterator[ChaiCmdExecutorBlocking]:
     # We need to ensure the server is created before we create the client
     _ = server
-    with ChaiCmdExecutor.create() as client:
+    with ChaiCmdExecutorBlocking.create() as client:
         yield client
 
 
-def test_can_obtain_a_blocking_connection(client: ChaiCmdExecutor) -> None:
+def test_can_obtain_a_blocking_connection(client: ChaiCmdExecutorBlocking) -> None:
     assert client.is_connected()
 
 
@@ -33,7 +33,7 @@ def test_can_obtain_a_blocking_connection(client: ChaiCmdExecutor) -> None:
 # blocking calls can indeed be made.
 
 
-def test_can_check_blocking_model(client: ChaiCmdExecutor) -> None:
+def test_can_check_blocking_model(client: ChaiCmdExecutorBlocking) -> None:
     spec = """
 ---- MODULE M ----
 Init == TRUE
@@ -47,7 +47,7 @@ Next == TRUE
 
 
 def test_typechecking_a_well_typed_model_blocking_succeeds(
-    client: ChaiCmdExecutor,
+    client: ChaiCmdExecutorBlocking,
 ) -> None:
     spec = r"""
 ---- MODULE M ----
@@ -67,7 +67,7 @@ Add1 == x + 1
 
 
 def test_parsing_a_valid_model_blocking_succeeds(
-    client: ChaiCmdExecutor,
+    client: ChaiCmdExecutorBlocking,
 ) -> None:
     spec = r"""
 ---- MODULE M ----
