@@ -1,7 +1,26 @@
-# Chai: Client for Human-Apalache Interaction
+# 🍵 Chai: Client for Human-Apalache Interaction
 
-Chai is a Python RPC client to interact with the (nascent) Server for
-Human-palache Interaction (or *Shai*).
+Chai is a Python RPC client to interact with the Server for Human-Apalache
+Interaction (or *Shai*). It enables transparent interactions with the Apalache
+model checker via python function calls.
+
+Chai is developed by the [Apalache](https://apalache.informal.systems/) team at
+[Informal Systems](https://informal.systems/).
+
+## Installation
+
+You can install the `apalache-chai` library from this git repo with:
+
+```sh
+pip install git+https://github.com/informalsystems/apalache-chai.git
+```
+
+If you are using [poetry](https://python-poetry.org/) to manage your project,
+you can add a dependency on `apalache-chai` with:
+
+```sh
+poetry add git+https://github.com/informalsystems/apalache-chai.git
+```
 
 ## Development
 
