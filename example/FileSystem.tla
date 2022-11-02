@@ -20,7 +20,7 @@ VARIABLES
     \* The set of all files in the system.
     \* @type: Set($file);
     files,
-    \* The commend issued.
+    \* The command issued.
     \* @type: $cmd;
     cmd
 
