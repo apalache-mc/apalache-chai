@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - trunk
-      - 19/build-api-docs # XXX
     # TODO: Once cutting stable releases, only build for tags.
     # tags:
     #   - '*'
