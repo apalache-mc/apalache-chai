@@ -64,7 +64,7 @@ class NoServerConnection(ChaiException):
 
 # For the type annotation of decorators, see
 # https://github.com/microsoft/pyright/blob/main/docs/typed-libraries.md#annotating-decorators
-def _requires_connection(rpc_call):
+def requires_connection(rpc_call):
     """
     A decorator to enforce the contract that RPC calls presuppose the
     client has a connection.
@@ -151,7 +151,7 @@ class Chai(Generic[Service], Awaitable, ABC):
     @classmethod
     @property
     @abstractmethod
-    def PING_REQUEST(cls) -> Any:
+    def _PING_REQUEST(cls) -> Any:
         """The PingRequest message belonging to the service"""
         ...
 
