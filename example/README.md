@@ -22,7 +22,7 @@ supporting three actions:
 - Listing the children of a directory  (like `ls`)
 
 The spec is used to generate counter-examples leading up to certain states. The
-python app takes CLI parameters that determine the properites of the states, and
+python app takes CLI parameters that determine the properties of the states, and
 does plumbing to interact with the Apalache server.
 
 Here's an example of a session:
