@@ -87,7 +87,7 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
     will raise an `RpcCallWithoutConnection` exception.
     """
 
-    PING_REQUEST = msg.PingRequest()  # type: ignore
+    _PING_REQUEST = msg.PingRequest()  # type: ignore
 
     @classmethod
     def _service(cls, channel: aio.Channel) -> service.TransExplorerStub:
@@ -128,7 +128,7 @@ class ChaiTransExplorer(client.Chai[service.TransExplorerStub]):
     def is_connected(self) -> bool:
         return super().is_connected() and self._conn is not None
 
-    @client._requires_connection
+    @client.requires_connection
     async def load_model(
         self,
         spec: Union[str, Path],

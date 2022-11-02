@@ -177,14 +177,14 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
     ```
     """
 
-    PING_REQUEST = msg.PingRequest  # type: ignore
+    _PING_REQUEST = msg.PingRequest  # type: ignore
 
     @classmethod
     def _service(cls, channel: aio.Channel) -> service.CmdExecutorStub:
         return service.CmdExecutorStub(channel)
 
-    @client._requires_connection
     async def check(
+    @client.requires_connection
         self,
         input: Source,
         config: Optional[dict] = None,
@@ -204,8 +204,8 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             err_parser=_checking_err,
         )
 
-    @client._requires_connection
     async def parse(
+    @client.requires_connection
         self,
         input: Source,
         config: Optional[dict] = None,
@@ -225,8 +225,8 @@ class ChaiCmdExecutor(client.Chai[service.CmdExecutorStub]):
             err_parser=_parse_err,
         )
 
-    @client._requires_connection
     async def typecheck(
+    @client.requires_connection
         self,
         input: Source,
         config: Optional[dict] = None,
