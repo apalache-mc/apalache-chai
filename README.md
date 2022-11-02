@@ -22,6 +22,10 @@ you can add a dependency on `apalache-chai` with:
 poetry add git+https://github.com/informalsystems/apalache-chai.git
 ```
 
+## Documentation
+
+- [API Documentation](https://informalsystems.github.io/apalache-chai/chai.html)
+
 ## Development
 
 ### Clone the repository
