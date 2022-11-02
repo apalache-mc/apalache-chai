@@ -14,7 +14,7 @@ from chai.cmd_executor import (
 from chai.source import Source
 
 
-class ChaiCmdExecutor:
+class ChaiCmdExecutorBlocking:
     """A blocking alternative for the async :class:`~chai.ChaiCmdExecutor`
 
     See the async interface for documentation on the available methods.
