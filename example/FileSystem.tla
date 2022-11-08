@@ -44,6 +44,10 @@ IsFile(f) == "File" = VariantTag(f)
 \* @type: $file => $path;
 FilePath(f) == VariantGetOrElse("Dir", f, VariantGetUnsafe("File", f))
 
+\* @type: (Seq(a), Seq(a)) => Bool;
+IsPrefix(prefix, s) ==
+  /\ Len(s) >= Len(prefix)
+  /\ \A i \in DOMAIN prefix: prefix[i] = s[i]
 
 \** The children of a file (i.e., the contents of a directory)
 \*
@@ -51,7 +55,7 @@ FilePath(f) == VariantGetOrElse("Dir", f, VariantGetUnsafe("File", f))
 \*
 \* @type: $file => Set($file);
 Children(p) ==
-  { child \in files: FilePath(p) = SubSeq(FilePath(child), 1, Len(FilePath(p))) }
+  { child \in files: IsPrefix(FilePath(p), FilePath(child)) }
 
 \* @type: Seq($file);
 NoFile == <<>>
