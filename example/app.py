@@ -2,7 +2,7 @@
 
 This demo performs the following actions:
 
-- Connects to a running apalche server
+- Connects to a running Apalache server
 - Makes an RPC call to the server to parse a TLA file into a JSON representation
   of the model
 - Updates the model to add some values taken from CLI args
