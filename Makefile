@@ -61,7 +61,7 @@ lint:
 	poetry run black . --check
 
 test:
-	poetry run pyright chai/ tests/ integration-tests/
+	poetry run pyright chai/ tests/ integration-tests/ example/
 	poetry run pytest -s tests/
 
 integration:

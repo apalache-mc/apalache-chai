@@ -4,10 +4,10 @@ See https://pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fix
 """
 from __future__ import annotations
 
-from collections.abc import Iterator
-from subprocess import Popen
-from pathlib import Path
 import os
+from collections.abc import Iterator
+from pathlib import Path
+from subprocess import Popen
 
 import pytest
 
