@@ -83,36 +83,31 @@ None == << "None", NoFile, {} >>
 \* ACTIONS *\
 \***********\
 
-\* @type: Bool;
-Touch ==
-  \E d \in files:
-    /\ IsDir(d)
-    /\ \E n \in Names:
-      \* @type: $file;
-      LET newFile == File(Append(FilePath(d), n)) IN
-      /\ files' = { newFile } \union files
-      /\ cmd' = TouchCmd(newFile)
+\* @type: ($file, Str) => Bool;
+Touch(dir, name) ==
+  LET newFile == File(Append(FilePath(dir), name)) IN
+  /\ files' = { newFile } \union files
+  /\ cmd' = TouchCmd(newFile)
 
 
-\* @type: Bool;
-MkDir ==
-  \E d \in files:
-    /\ IsDir(d)
-    /\ \E n \in Names:
-      \* @type: $file;
-      LET newDir == Dir(Append(FilePath(d), n)) IN
-      /\ files' = { newDir } \union files
-      /\ cmd' = MkDirCmd(newDir)
+\* @type: ($file, Str) => Bool;
+MkDir(dir, name) ==
+  LET newDir == Dir(Append(FilePath(dir), name)) IN
+  /\ files' = { newDir } \union files
+  /\ cmd' = MkDirCmd(newDir)
 
-\* @type: Bool;
-Ls ==
-  /\ \E p \in files: cmd' = LsCmd(p)
+\* @type: $file => Bool;
+Ls(p) ==
+  /\ cmd' = LsCmd(p)
   /\ UNCHANGED files
 
 Next ==
-  \/ Touch
-  \/ MkDir
-  \/ Ls
+  \E f \in files:
+    \/ /\ IsDir(f)
+      /\ \E n \in Names:
+        \/ Touch(f, n)
+        \/ MkDir(f, n)
+    \/ Ls(f)
 
 
 \******************\
