@@ -9,7 +9,7 @@ license = "Apache2.0"
 python = "^3.8"
 grpcio-tools = "^1.47.0"
 poetry = {version = "^1.2.0b3", allow-prereleases = true}
-grpcio = "^1.47.0"
+grpcio = "^1.53.0"
 grpc-stubs = "^1.24.11"
 types-protobuf = "^3.19.22"
 typing-extensions = "^4.3.0"
