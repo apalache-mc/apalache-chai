@@ -13,7 +13,6 @@ grpcio = "^1.53.0"
 grpc-stubs = "^1.24.11"
 types-protobuf = "^3.19.22"
 typing-extensions = "^4.3.0"
-cryptography = "41.0.2"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^4.0.1"
