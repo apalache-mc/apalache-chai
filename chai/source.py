@@ -39,8 +39,8 @@ def _get_module_deps(module: str) -> List[str]:
 
     For the grammar of TLA module imports, see
 
-    - EXTENDS: https://github.com/tlaplus-community/tlaplus-standard/blob/3cbb0c251d63d5365f71aa0b3fea0719b6879edd/grammar/TLAPlus2Grammar.tla#L83 # noqa
-    - INSTANCE: https://github.com/tlaplus-community/tlaplus-standard/blob/3cbb0c251d63d5365f71aa0b3fea0719b6879edd/grammar/TLAPlus2Grammar.tla#L141-L144 # noqa
+    - EXTENDS: https://github.com/tlaplus/rfcs/blob/2a772d9dd11acec5d7dedf30abfab91a49de48b8/language_standard/grammar/TLAPlus2Grammar.tla#L95 # noqa
+    - INSTANCE: https://github.com/tlaplus/rfcs/blob/2a772d9dd11acec5d7dedf30abfab91a49de48b8/language_standard/grammar/TLAPlus2Grammar.tla#L153-L156 # noqa
 
     And for examples of both: http://lamport.azurewebsites.net/tla/newmodule.html#Section2
     """
