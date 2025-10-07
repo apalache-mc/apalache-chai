@@ -1,5 +1,9 @@
 # 🍵 Chai: Client for Human-Apalache Interaction
 
+**WARNING:** Chai is no longer maintained. If you are looking for an API for
+interacting with Apalache, we recommend checking the new
+[Apalache JSON-RPC](https://github.com/apalache-mc/apalache/tree/main/json-rpc).
+
 Chai is a Python RPC client to interact with the Server for Human-Apalache
 Interaction (or *Shai*). It enables transparent interactions with the Apalache
 model checker via python function calls.
